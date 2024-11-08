@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "41C61645-CF7E-456C-B3D7-8094E1F2B957"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "FB011C7C-726D-4504-9B53-58B997A667F9"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../../../../var/folders/ts/8ppl5ggs4p9fqj3d9wt2k0cc0000gn/T/swift-generated-sources/@__swiftmacro_9SplitDiff0023SplitDiffAppswift_elFCffMX19_0_33_346F5DB5AF2E3538138D3E32C09428D4Ll7PreviewfMf_.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "2"
+            endingLineNumber = "2"
+            landmarkName = "unknown"
+            landmarkType = "0">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "ECC35FE0-F80E-4A08-A289-F8A75FE6F09A"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../../../../var/folders/ts/8ppl5ggs4p9fqj3d9wt2k0cc0000gn/T/swift-generated-sources/@__swiftmacro_9SplitDiff0023SplitDiffAppswift_elFCffMX19_0_33_346F5DB5AF2E3538138D3E32C09428D4Ll7PreviewfMf_.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "1"
+            endingLineNumber = "1"
+            landmarkName = "$s9SplitDiff0023SplitDiffAppswift_elFCffMX19_0_33_346F5DB5AF2E3538138D3E32C09428D4Ll7PreviewfMf_15PreviewRegistryfMu_"
+            landmarkType = "37">
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7C0E97312CDD672600E34F1C /* AIReceiptScanner in Frameworks */ = {isa = PBXBuildFile; productRef = 7C0E97302CDD672600E34F1C /* AIReceiptScanner */; };
 		3ABACAD82CDE00E5007F9379 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 3ABACAD72CDE00E5007F9379 /* FirebaseAnalytics */; };
 		3ABACADA2CDE0246007F9379 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 3ABACAD92CDE0246007F9379 /* FirebaseAuth */; };
 		3ABACADD2CDE0285007F9379 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 3ABACADC2CDE0285007F9379 /* GoogleSignIn */; };
@@ -48,6 +49,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7C0E97312CDD672600E34F1C /* AIReceiptScanner in Frameworks */,
 				3ABACAD82CDE00E5007F9379 /* FirebaseAnalytics in Frameworks */,
 				3ABACADA2CDE0246007F9379 /* FirebaseAuth in Frameworks */,
 				3ABACADD2CDE0285007F9379 /* GoogleSignIn in Frameworks */,
@@ -73,12 +75,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7C0E972F2CDD672600E34F1C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		7C224A6C2CD012D800AB2B13 = {
 			isa = PBXGroup;
 			children = (
 				7C224A772CD012D800AB2B13 /* SplitDiff */,
 				7C224A882CD012D900AB2B13 /* SplitDiffTests */,
 				7C224A922CD012D900AB2B13 /* SplitDiffUITests */,
+				7C0E972F2CDD672600E34F1C /* Frameworks */,
 				7C224A762CD012D800AB2B13 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -113,6 +123,7 @@
 			);
 			name = SplitDiff;
 			packageProductDependencies = (
+				7C0E97302CDD672600E34F1C /* AIReceiptScanner */,
 				3ABACAD72CDE00E5007F9379 /* FirebaseAnalytics */,
 				3ABACAD92CDE0246007F9379 /* FirebaseAuth */,
 				3ABACADC2CDE0285007F9379 /* GoogleSignIn */,
@@ -407,13 +418,16 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SplitDiff/Preview Content\"";
+				DEVELOPMENT_TEAM = LGXR5ZX5YG;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = 6.0;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = 6.0;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -435,13 +449,16 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SplitDiff/Preview Content\"";
+				DEVELOPMENT_TEAM = LGXR5ZX5YG;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = 6.0;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = 6.0;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -592,6 +609,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		7C0E97302CDD672600E34F1C /* AIReceiptScanner */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7C590B662CDC6011007D05D2 /* XCRemoteSwiftPackageReference "AIReceiptScanner" */;
+			productName = AIReceiptScanner;
 		3ABACAD72CDE00E5007F9379 /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3ABACAD62CDE0081007F9379 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

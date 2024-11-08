@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import PhotosUI
+import AIReceiptScanner
 import FirebaseAuth
 
 struct ContentView: View {
