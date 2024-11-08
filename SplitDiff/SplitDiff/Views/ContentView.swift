@@ -8,75 +8,104 @@
 import SwiftUI
 import PhotosUI
 import AIReceiptScanner
+import FirebaseAuth
 
 struct ContentView: View {
     
-    @StateObject var receiptImageModel = ReceiptImageModel()
+    @State var selectedTab = 0
+    @State private var email = ""
+    @State private var password = ""
+    @State private var message = ""
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            
-            VStack {
-                Text("🧾")
-                    .font(.system(size: 24))
-                Text("Split Diff!")
-                    .font(.headline)
-                
-                RandomTest(viewModel: receiptImageModel)
-                
-                Button("Take a Picture") {
-                    print("Took a Picture!")
+        TabView(selection: $selectedTab) {
+            NavigationStack {
+                VStack(spacing: 20) {
+                    TextField("Email", text: $email)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal)
+                    
+                    SecureField("Password", text: $password)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal)
+                    
+                    Button("Sign Up") {
+                        signUp()
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                    
+                    Button("Sign In") {
+                        signIn()
+                    }
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                    
+                    Text(message)
+                        .foregroundColor(.red)
                 }
-                .padding(.top, 20)
+                .padding()
+                .navigationTitle("SplitDiff🧾")
             }
-            .padding()
-        }
-    }
-}
-
-struct RandomTest: View {
-    @ObservedObject var viewModel: ReceiptImageModel
-    
-    var body: some View {
-        
-        VStack {
-            
-            ReceiptImageViewer(imageState: viewModel.imageState)
-            
-            PhotosPicker(selection: $viewModel.imageSelection,
-                         matching: .images,
-                         photoLibrary: .shared()){
-                            Text("Choose A Picture")
-    //            Image(systemName: "pencil.circle.fill")
-    //                .symbolRenderingMode(.multicolor)
-    //                .font(.system(size: 30))
-    //                .foregroundColor(.accentColor)
+            .tabItem {
+                Image(systemName: "house")
+                Text("")
             }
+            .tag(0)
             
+            NavigationStack {
+                VStack {
+                    Button("Take a Picture") {
+                        print("Took a Picture!")
+                    }
+                }
+                .navigationTitle("SplitDiff🧾")
+            }
+            .tabItem {
+                Image("receipt_1f9fe")
+                    .resizable()
+                    .frame(width: 10, height: 10)
+                Text("")
+            }
+            .tag(1)
+            
+            NavigationStack {
+                VStack {
+                    Text("History")
+                }
+                .navigationTitle("SplitDiff🧾")
+            }
+            .tabItem {
+                Image(systemName: "clock")
+                Text("")
+            }
+            .tag(2)
         }
-        
-        
     }
-}
-
-struct ReceiptImageViewer: View {
-    let imageState: ReceiptImageModel.ImageState
-
     
-    var body: some View {
-        switch imageState {
-        case .success(let image):
-            image.resizable()
-        case .loading:
-            ProgressView()
-        case .empty:
-            EmptyView()
-        case .failure:
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 40))
-                .foregroundColor(.white)
+    func signUp() {
+            Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
+                if let error = error {
+                    message = "Error: \(error.localizedDescription)"
+                    return
+                }
+                message = "User signed up successfully!"
+            }
         }
-    }
+
+        func signIn() {
+            Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
+                if let error = error {
+                    message = "Error: \(error.localizedDescription)"
+                    return
+                }
+                message = "User signed in successfully!"
+            }
+        }
 }
 
 #Preview {
