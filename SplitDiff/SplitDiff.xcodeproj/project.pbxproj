@@ -184,6 +184,9 @@
 			);
 			mainGroup = 7C224A6C2CD012D800AB2B13;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7C590B662CDC6011007D05D2 /* XCRemoteSwiftPackageReference "AIReceiptScanner" */,
+			);
 			productRefGroup = 7C224A762CD012D800AB2B13 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -540,6 +543,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7C590B662CDC6011007D05D2 /* XCRemoteSwiftPackageReference "AIReceiptScanner" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/alfianlosari/AIReceiptScanner";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 7C224A6D2CD012D800AB2B13 /* Project object */;
 }
