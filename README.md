@@ -10,7 +10,13 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+3. Start the app
+
+   ```
+   Create firebase.js in the root of the project and paste in firebase info (ask Andriy for this)
+   ```
+
+3. Start the app
 
    ```bash
     npx expo start
