@@ -7,6 +7,8 @@ expo-env.d.ts
 # @end expo-cli
 
 # Xcode
+ios/
+build/
 !**/*.xcodeproj
 !**/*.pbxproj
 !**/*.xcworkspacedata
@@ -30,7 +32,9 @@ DerivedData
 project.xcworkspace
 **/.xcode.env.local
 
+
 # Gradle
+/android
 /build/
 /packages/rn-tester/build
 /packages/rn-tester/android/app/.cxx/
