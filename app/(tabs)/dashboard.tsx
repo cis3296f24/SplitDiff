@@ -1,6 +1,5 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
-import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system'
 
@@ -27,6 +26,7 @@ export default function DashboardTab() {
       console.error('Error picking image:', error);
     }
   };
+
 
   return (
     <View style={styles.container}>
