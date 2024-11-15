@@ -38,12 +38,18 @@
    ```
    Create firebase.js in the root of the project and paste in firebase info (ask Andriy for this)
    ```
+   
+4. **Account**:
+   ```bash
+   Download Expo Go Application, and make an Expo account
+   ```
 
-4. **Start the Development Server**:
+5. **Start the Development Server**:
    ```bash
    npx expo start
    ```
-5. **Run the App**:
+   
+6. **Run the App**:
    - Scan the QR code displayed in the terminal or Expo DevTools with the **Expo Go** app.
    - The app will load on your device
    
