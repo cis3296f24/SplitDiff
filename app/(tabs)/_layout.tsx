@@ -5,6 +5,7 @@ import { Tabs, useRouter } from 'expo-router';
 import { auth } from '../../firebase';
 import { signOut } from 'firebase/auth';
 import { Alert } from 'react-native';
+import CameraPage from './camera';
 
 export default function TabLayout() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function TabLayout() {
   };
 
   return (
-    <Tabs screenOptions={{ 
+    <Tabs screenOptions={{
       tabBarActiveTintColor: 'blue',
       headerRight: () => (
         <TouchableOpacity onPress={handleSignOut}>
@@ -38,7 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="camera"
         options={{
-          title: '',
+          title: 'Camera',
           tabBarIcon: () => (
             <Image
               source={require('../../assets/images/receipt_1f9fe.png')}
