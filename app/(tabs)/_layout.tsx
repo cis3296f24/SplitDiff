@@ -5,9 +5,9 @@ import { Tabs, useRouter } from 'expo-router';
 import { auth } from '../../firebase';
 import { signOut } from 'firebase/auth';
 import { Alert } from 'react-native';
-import CameraPage from './camera';
 
 export default function TabLayout() {
+
   const router = useRouter();
 
   const handleSignOut = async () => {

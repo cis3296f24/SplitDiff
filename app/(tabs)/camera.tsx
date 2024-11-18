@@ -7,6 +7,7 @@ import { PinchGestureHandler } from 'react-native-gesture-handler';
 import { PressableOpacity } from 'react-native-pressable-opacity'
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import IonIcon from 'react-native-vector-icons/Ionicons'
+import { useNavigation } from 'expo-router';
 
 //components
 import { CaptureButton } from '@/components/CaptureButton';
@@ -18,7 +19,7 @@ import type { PinchGestureHandlerGestureEvent } from 'react-native-gesture-handl
 import type { NativeStackScreenProps } from 'react-native-screens/native-stack';
 
 // constants
-import { CONTENT_SPACING, CONTROL_BUTTON_SIZE, MAX_ZOOM_FACTOR, SCREEN_HEIGHT, SCREEN_WIDTH } from '@/constants/Camera'
+import { SAFE_AREA_PADDING, CONTENT_SPACING, CONTROL_BUTTON_SIZE, MAX_ZOOM_FACTOR, SCREEN_HEIGHT, SCREEN_WIDTH } from '@/constants/Camera'
 
 function NoCameraDeviceError() {
   return <Text>No Camera Device Error</Text>
@@ -48,9 +49,10 @@ type Routes = {
 }
 
 type Props = NativeStackScreenProps<Routes, 'CameraPage'>
-export default function CameraPage({ navigation }: Props): React.ReactElement {
+export default function CameraPage(): React.ReactElement {
 
   const camera = useRef<Camera>(null);
+  const navigation = useNavigation();
   const { hasPermission, requestPermission } = useCameraPermission();
   const [isCameraInitialized, setIsCameraInitialized] = useState(false)
   const zoom = useSharedValue(1)
@@ -115,13 +117,14 @@ export default function CameraPage({ navigation }: Props): React.ReactElement {
   const onMediaCaptured = useCallback(
     (media: PhotoFile, type: 'photo') => {
       console.log(`Media captured! ${JSON.stringify(media)}`)
-      navigation.navigate('MediaPage', {
-        path: media.path,
-        type: type,
-      })
+      // navigation.navigate('media', {
+      //   path: media.path,
+      //   type: type,
+      // })
+      
     },
-    [navigation],
-  )
+    [navigation])
+
   const onFlashPressed = useCallback(() => {
     setFlash((f) => (f === 'off' ? 'on' : 'off'))
   }, [])
@@ -223,7 +226,6 @@ export default function CameraPage({ navigation }: Props): React.ReactElement {
               enableZoomGesture={false}
               animatedProps={cameraAnimatedProps}
               exposure={0}
-              enableFpsGraph={true}
               outputOrientation="device"
               photo={true}
               video={true}
@@ -270,9 +272,6 @@ export default function CameraPage({ navigation }: Props): React.ReactElement {
         <PressableOpacity style={styles.button} onPress={() => navigation.navigate('Devices')}>
           <IonIcon name="settings-outline" color="white" size={24} />
         </PressableOpacity>
-        <PressableOpacity style={styles.button} onPress={() => navigation.navigate('CodeScannerPage')}>
-          <IonIcon name="qr-code-outline" color="white" size={24} />
-        </PressableOpacity>
       </View>
     </View>
   );
@@ -286,7 +285,7 @@ const styles = StyleSheet.create({
   captureButton: {
     position: 'absolute',
     alignSelf: 'center',
-    // bottom: SAFE_AREA_PADDING.paddingBottom,
+    bottom: SAFE_AREA_PADDING.paddingBottom,
   },
   button: {
     marginBottom: CONTENT_SPACING,
@@ -299,8 +298,8 @@ const styles = StyleSheet.create({
   },
   rightButtonRow: {
     position: 'absolute',
-    // right: SAFE_AREA_PADDING.paddingRight,
-    // top: SAFE_AREA_PADDING.paddingTop,
+    right: SAFE_AREA_PADDING.paddingRight,
+    top: SAFE_AREA_PADDING.paddingTop,
   },
   text: {
     color: 'white',
