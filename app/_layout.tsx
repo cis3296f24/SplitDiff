@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import {  Stack } from 'expo-router';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { StyleSheet } from 'react-native'
@@ -10,6 +10,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" redirect={true} />
           <Stack.Screen name="welcome" />
+          <Stack.Screen name="media" />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         </Stack>
       </GestureHandlerRootView>
