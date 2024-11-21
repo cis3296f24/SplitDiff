@@ -38,7 +38,6 @@ import DocumentIntelligence, {getLongRunningPoller, isUnexpected, AnalyzeResultO
 // };
 
 async function analyzeImage(imageUri: string) {
-
     if (!imageUri) {
         alert('Please select an image first.');
         return;
@@ -72,7 +71,6 @@ async function analyzeImage(imageUri: string) {
     const result = (
         (await (poller).pollUntilDone()).body as AnalyzeResultOperationOutput
     ).analyzeResult;
-
     const documents = result?.documents;
     const document = documents && documents[0];
 

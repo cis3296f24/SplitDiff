@@ -2,11 +2,11 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system'
-
 import { analyzeImage } from '@/utils/image';
 import { parse } from '@babel/core';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native-gesture-handler';
+import jsonData from '../../assets/json/image0.json'; // Adjust the path as per your project structure
 
 type ItemType = {
   cost: number,
@@ -138,6 +138,18 @@ export default function DashboardTab() {
           <Text>Extract info from Image</Text>
         </TouchableOpacity>
 
+
+        <TouchableOpacity
+        onPress={() => {
+          // Load bundled JSON file for testing
+          console.log(jsonData);
+          setLabels(jsonData.analyzeResult.documents[0].fields);
+        }}
+      >
+        <Text>Extract info from Bundled JSON</Text>
+      </TouchableOpacity>
+
+      
         {
           labels && (
               <View>
