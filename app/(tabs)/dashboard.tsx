@@ -1,12 +1,13 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from 'react-native';
 import { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system'
 import { analyzeImage } from '@/utils/image';
 import { parse } from '@babel/core';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView } from 'react-native-gesture-handler';
+import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import jsonData from '../../assets/json/image0.json'; // Adjust the path as per your project structure
+import { Ionicons } from '@expo/vector-icons';
 
 type ItemType = {
   cost: number,
@@ -14,6 +15,10 @@ type ItemType = {
   quantity: number,
 }
 
+type PersonaType = {
+  id: string;
+  name: string;
+};
 
 function Item({data}: any) {
 
@@ -65,24 +70,19 @@ function Item({data}: any) {
   }, [])
 
   return (
-    <View style={styles.item_container}>
-      <View style={styles.item_sub_container}>
-        <Text>
-          {label.name}
-        </Text>
+    <View style={styles.itemContainer}>
+      <View style={styles.itemRow}>
+        <Text style={styles.itemLabel}>Name:</Text>
+        <Text style={styles.itemValue}>{label.name}</Text>
       </View>
-
-      <View style={styles.item_sub_container}>
-        <Text>
-          {label.quantity}
-        </Text>
+      <View style={styles.itemRow}>
+        <Text style={styles.itemLabel}>Quantity:</Text>
+        <Text style={styles.itemValue}>{label.quantity}</Text>
       </View>
-
-      <View style={styles.item_sub_container}>
-          <Text>
-            {label.cost}
-          </Text>
-        </View>
+      <View style={styles.itemRow}>
+        <Text style={styles.itemLabel}>Cost:</Text>
+        <Text style={styles.itemValue}>${label.cost.toFixed(2)}</Text>
+      </View>
     </View>
   );
 }
@@ -93,6 +93,8 @@ export default function DashboardTab() {
 
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [labels, setLabels] = useState(null);
+  const [personaName, setPersonaName] = useState<string>('');
+  const [personas, setPersonas] = useState<PersonaType[]>([]);
 
   const pickImage = async () => {
     try {
@@ -111,8 +113,20 @@ export default function DashboardTab() {
     }
   };
 
+  const handleAddPersona = () => {
+    if (personaName.trim() !== '') {
+      setPersonas([...personas, { id: Math.random().toString(), name: personaName.trim() }]);
+      setPersonaName('');
+    }
+  };
+
+  const handleRemovePersona = (id: string) => {
+    setPersonas(personas.filter(persona => persona.id !== id));
+  };
+
   return (
     // <SafeAreaView>
+    <View style={{ flex: 1 }}>
       <ScrollView>
         {imageUri && (
           <Image
@@ -170,29 +184,130 @@ export default function DashboardTab() {
         }
 
       </ScrollView>
+{/* Bottom bar for adding personas */}
+{labels && (
+        <>
+          <View style={styles.bottomBar}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Enter persona name"
+              value={personaName}
+              onChangeText={setPersonaName}
+            />
+            <TouchableOpacity style={styles.addButton} onPress={handleAddPersona}>
+              <Text style={styles.addButtonText}>Add Persona</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.doneButton} onPress={() => alert('Done editing')}>
+              <Ionicons name="arrow-forward" size={17} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          <FlatList
+            data={personas}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.personaItem}>
+                <Text>{item.name}</Text>
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => handleRemovePersona(item.id)}
+                >
+                  <Ionicons name="trash-outline" size={24} color="red" />
+                </TouchableOpacity>
+              </View>
+            )}
+            contentContainerStyle={styles.personaList}
+          />
+        </>
+      )}
+    </View>
     // </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  item_container: {
-    flex: 1,
-    gap: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-    width: '100%',
-  },
-  item_sub_container: {
-    backgroundColor: 'grey',
-    borderRadius: 10,
+  itemContainer: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
     padding: 10,
-  }
-
-
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 4,
+  },
+  itemLabel: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#333',
+  },
+  itemValue: {
+    fontSize: 14,
+    color: '#555',
+  },
+  scrollContainer: {
+    padding: 20,
+  },
+  itemSubContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 0,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+    backgroundColor: '#fff',
+  },
+  textInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginRight: 10,
+  },
+  addButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  personaList: {
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+  },
+  personaItem: {
+    padding: 10,
+    marginVertical: 5,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+  },
+  removeButton: {
+    padding: 5,
+    backgroundColor: 'transparent',
+  },
+  doneButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
 });
