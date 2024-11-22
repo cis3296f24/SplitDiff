@@ -3,96 +3,33 @@ import { useState, useEffect } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system'
 import { analyzeImage } from '@/utils/image';
-import { parse } from '@babel/core';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatList, ScrollView } from 'react-native-gesture-handler';
+import { FlatList, ScrollView, RectButton } from 'react-native-gesture-handler';
 import jsonData from '../../assets/json/image0.json'; // Adjust the path as per your project structure
 import { Ionicons } from '@expo/vector-icons';
 
-type ItemType = {
-  cost: number,
-  name: string,
-  quantity: number,
-}
+// components
+import Item from '@/components/Item';
+
 
 type PersonaType = {
   id: string;
   name: string;
 };
 
-function Item({data}: any) {
-
-  const [label, setLabel] = useState<ItemType>({
-    cost: 0,
-    name: '',
-    quantity: 0,
-  });
-
-  function parseText(data: any) {
-
-    const with_quantity_regex = /^\s*(\d+)\s+(.*\S)\s+(\(?)\$([0-9.]+)\)?\s*$/;
-    const no_quantity_regex = /(.*\S)\s+(\(?)\$([0-9.]+)\)?\s*$/;
-
-    const lines = data.content.replace(/\n/g, ' ')
-
-    if (with_quantity_regex.test(lines)) {
-      const match = lines.match(with_quantity_regex);
-      const quantity = parseInt(match[1]);
-      const name = match[2];
-      const cost = parseFloat(match[4]);
-
-      setLabel({
-        cost: cost,
-        name: name,
-        quantity: quantity,
-      });
-    }
-    else if (no_quantity_regex.test(lines)) {
-      const match = lines.match(no_quantity_regex);
-      const quantity = 1;
-      const name = match[1];
-      const cost = parseFloat(match[3]);
-
-      setLabel({
-        cost: cost,
-        name: name,
-        quantity: quantity,
-      });
-
-    }
-
-
-
-  }
-
-  useEffect(() => {
-    parseText(data);
-  }, [])
-
-  return (
-    <View style={styles.itemContainer}>
-      <View style={styles.itemRow}>
-        <Text style={styles.itemLabel}>Name:</Text>
-        <Text style={styles.itemValue}>{label.name}</Text>
-      </View>
-      <View style={styles.itemRow}>
-        <Text style={styles.itemLabel}>Quantity:</Text>
-        <Text style={styles.itemValue}>{label.quantity}</Text>
-      </View>
-      <View style={styles.itemRow}>
-        <Text style={styles.itemLabel}>Cost:</Text>
-        <Text style={styles.itemValue}>${label.cost.toFixed(2)}</Text>
-      </View>
-    </View>
-  );
+type ItemType = {
+  id: number,
+  cost: number,
+  name: string,
+  quantity: number,
 }
-
 
 
 export default function DashboardTab() {
 
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [labels, setLabels] = useState(null);
+  const [items, setItems] = useState<ItemType[]>();
+
   const [personaName, setPersonaName] = useState<string>('');
   const [personas, setPersonas] = useState<PersonaType[]>([]);
 
@@ -124,6 +61,65 @@ export default function DashboardTab() {
     setPersonas(personas.filter(persona => persona.id !== id));
   };
 
+  const editItem = (itemId: number, newValue) => {
+    console.log('Editing item');
+  };
+
+  const removeItem = (itemId: number) => {
+    if (!items) return;
+    setItems(items.filter((item) => item.id != itemId));
+  };
+  const addItem = () => {
+    console.log('Adding item');
+  };
+
+
+  function parseText(data: any) {
+
+    const with_quantity_regex = /^\s*(\d+)\s+(.*\S)\s+(\(?)\$([0-9.]+)\)?\s*$/;
+    const no_quantity_regex = /(.*\S)\s+(\(?)\$([0-9.]+)\)?\s*$/;
+
+    const items: ItemType[] = [];
+
+    let id = 0;
+    for (const line of data.Items.valueArray) {
+
+      const parsed_line = line.content.replace(/\n/g, ' ');
+
+      if (with_quantity_regex.test(parsed_line)) {
+        const match = parsed_line.match(with_quantity_regex);
+        if (!match)  return;
+
+        const quantity = parseInt(match[1]);
+        const name = match[2];
+        const cost = parseFloat(match[4]);
+
+        items.push({
+          id: id++,
+          cost: cost,
+          name: name,
+          quantity: quantity,
+        });
+      }
+      else if (no_quantity_regex.test(parsed_line)) {
+        const match = parsed_line.match(no_quantity_regex);
+        if (!match) return
+        const quantity = 1;
+        const name = match[1];
+        const cost = parseFloat(match[3]);
+
+        items.push({
+          id: id++,
+          cost: cost,
+          name: name,
+          quantity: quantity,
+        });
+      }
+    }
+
+    return items;
+  }
+
   return (
     // <SafeAreaView>
     <View style={{ flex: 1 }}>
@@ -144,8 +140,9 @@ export default function DashboardTab() {
           onPress={ () => {
             analyzeImage(imageUri as string)
             .then((response) => {
-              setLabels(response);
-            });
+              setItems(parseText(response));
+            })
+            ;
 
           }}
         >
@@ -156,24 +153,26 @@ export default function DashboardTab() {
         <TouchableOpacity
         onPress={() => {
           // Load bundled JSON file for testing
-          console.log(jsonData);
-          setLabels(jsonData.analyzeResult.documents[0].fields);
+          // console.log(jsonData);
+          setItems(parseText(jsonData.analyzeResult.documents[0].fields));
         }}
       >
         <Text>Extract info from Bundled JSON</Text>
       </TouchableOpacity>
 
-      
+
         {
-          labels && (
+          items && (
               <View>
                 <Text>
                   Info:
                 </Text>
                 {
-                  labels.Items.valueArray.map((label: any) => {
+                  items.map((item: any) => {
                     return (
-                      <Item data={label} />
+                      <Item key={item.ind} data={item}
+                      onDelete={removeItem}
+                      onEdit={removeItem} />
                     )
                   })
                 }
@@ -185,8 +184,13 @@ export default function DashboardTab() {
 
       </ScrollView>
 {/* Bottom bar for adding personas */}
-{labels && (
+    {items && (
         <>
+          <View>
+            <TouchableOpacity style={styles.addButton} onPress={addItem}>
+                <Text style={styles.addButtonText}>Add Item</Text>
+              </TouchableOpacity>
+          </View>
           <View style={styles.bottomBar}>
             <TextInput
               style={styles.textInput}
@@ -197,7 +201,7 @@ export default function DashboardTab() {
             <TouchableOpacity style={styles.addButton} onPress={handleAddPersona}>
               <Text style={styles.addButtonText}>Add Persona</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.doneButton} onPress={() => alert('Done editing')}>
               <Ionicons name="arrow-forward" size={17} color="white" />
             </TouchableOpacity>
@@ -296,7 +300,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e0e0',
     borderRadius: 5,
     flexDirection: 'row',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
   removeButton: {
@@ -310,4 +314,5 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginLeft: 10,
   },
+  rightAction: { width: 50, height: 50, backgroundColor: 'purple' },
 });

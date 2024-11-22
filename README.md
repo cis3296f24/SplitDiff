@@ -20,7 +20,7 @@
    ```
 - **Expo Go**: Download the Expo Go app on your mobile device (iOS or Android).
 
-### Installation
+### Installation (Non-Camera Access Functionality)
 
 1. **Clone the Repository**:
    ```bash
@@ -33,12 +33,6 @@
    npm install
    ```
 
-3. **Create Credential**:
-
-   ```
-   Create firebase.js in the root of the project and paste in firebase info (ask Andriy for this)
-   ```
-   
 4. **Account**:
    ```bash
    Download Expo Go Application, and make an Expo account
@@ -48,11 +42,17 @@
    ```bash
    npx expo start
    ```
-   
+
 6. **Run the App**:
    - Scan the QR code displayed in the terminal or Expo DevTools with the **Expo Go** app.
    - The app will load on your device
-   
+
+Note: Since this is sandbox build, you will encounter this error as the camera package is not available.
+
+![Camera Package Error](https://imgur.com/UML9Bwl.png)
+
+You can minimize this error and use the extract feature button in the app within the "Dashboard" tab.
+
 In the output, you'll find options to open the app in a
 
 - [Development build](https://docs.expo.dev/develop/development-builds/introduction/)
@@ -92,6 +92,6 @@ We welcome contributions to **SplitDiff** to improve functionality and user expe
    - Go to the original **SplitDiff** repository on GitHub.
    - Click on the **Pull Requests** tab and submit a new pull request.
    - Provide a detailed description of your changes, linking any relevant issues.
-   - 
+   -
 Thank you for contributing to **SplitDiff**! Your help is essential for making this app even better.
 
