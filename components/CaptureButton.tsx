@@ -24,7 +24,7 @@ const BORDER_WIDTH = CAPTURE_BUTTON_SIZE * 0.1
 
 interface Props extends ViewProps {
     camera: React.RefObject<Camera>
-    onMediaCaptured: (media: PhotoFile, type: 'photo') => void
+    onMediaCaptured: (media_uri: string, type: 'photo') => void
     minZoom: number
     maxZoom: number
     cameraZoom: SharedValue<number>
@@ -62,7 +62,7 @@ const _CaptureButton: React.FC<Props> = ({
                 flash: flash,
                 enableShutterSound: false,
             })
-            onMediaCaptured(photo, 'photo')
+            onMediaCaptured(photo.path, 'photo')
         } catch (e) {
             console.error('Failed to take photo!', e)
         }

@@ -5,12 +5,16 @@ import { useCameraPermission, useCameraDevice, Camera, useCameraFormat } from 'r
 import Reanimated, { Extrapolation, interpolate, useAnimatedGestureHandler, useAnimatedProps, useSharedValue } from 'react-native-reanimated'
 import { PinchGestureHandler } from 'react-native-gesture-handler';
 import { PressableOpacity } from 'react-native-pressable-opacity'
-import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
+import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import IonIcon from 'react-native-vector-icons/Ionicons'
-import { useNavigation } from 'expo-router';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
+import { Link, useNavigation } from 'expo-router';
 
 //components
 import { CaptureButton } from '@/components/CaptureButton';
+
+// utils
+import { pickImage } from '@/utils/image';
 
 //types
 import type { CameraProps, CameraRuntimeError, PhotoFile } from 'react-native-vision-camera'
@@ -52,7 +56,7 @@ type Props = NativeStackScreenProps<Routes, 'CameraPage'>
 export default function CameraPage(): React.ReactElement {
 
   const camera = useRef<Camera>(null);
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { hasPermission, requestPermission } = useCameraPermission();
   const [isCameraInitialized, setIsCameraInitialized] = useState(false)
   const zoom = useSharedValue(1)
@@ -115,13 +119,12 @@ export default function CameraPage(): React.ReactElement {
     setIsCameraInitialized(true)
   }, [])
   const onMediaCaptured = useCallback(
-    (media: PhotoFile, type: 'photo') => {
-      console.log(`Media captured! ${JSON.stringify(media)}`)
-      // navigation.navigate('media', {
-      //   path: media.path,
-      //   type: type,
-      // })
-      
+    (media_uri: string, type: 'photo') => {
+      console.log(`Media captured! ${JSON.stringify(media_uri)}`)
+      navigation.navigate('media', {
+          path: media_uri,
+          type: type,
+      })
     },
     [navigation])
 
@@ -236,17 +239,31 @@ export default function CameraPage(): React.ReactElement {
         <Text>Your phone does not have a Camera.</Text>
       )}
 
-      <CaptureButton
-        style={styles.captureButton}
-        camera={camera}
-        onMediaCaptured={onMediaCaptured}
-        cameraZoom={zoom}
-        minZoom={minZoom}
-        maxZoom={maxZoom}
-        flash={supportsFlash ? flash : 'off'}
-        enabled={isCameraInitialized}
-        setIsPressingButton={setIsPressingButton}
-      />
+        <CaptureButton
+          style={styles.captureButton}
+          camera={camera}
+          onMediaCaptured={onMediaCaptured}
+          cameraZoom={zoom}
+          minZoom={minZoom}
+          maxZoom={maxZoom}
+          flash={supportsFlash ? flash : 'off'}
+          enabled={isCameraInitialized}
+          setIsPressingButton={setIsPressingButton}
+        />
+
+        <PressableOpacity
+        onPress={async () => {
+          let res = await pickImage();
+          if (res) {
+            res = res.replace('file://', '');
+            onMediaCaptured(res, 'photo');
+          }
+        }}
+        style={styles.button} >
+            <MaterialIcon name='photo-library' color="white" size={30} />
+            {/* <Link href="/media"> */}
+            {/* </Link> */}
+        </PressableOpacity>
 
       <View style={styles.rightButtonRow}>
         {supportsFlash && (
@@ -261,7 +278,7 @@ export default function CameraPage(): React.ReactElement {
         )}
         {supportsHdr && (
           <PressableOpacity style={styles.button} onPress={() => setEnableHdr((h) => !h)}>
-            <MaterialIcon name={enableHdr ? 'hdr' : 'hdr-off'} color="white" size={24} />
+            <MaterialCommunityIcon name={enableHdr ? 'hdr' : 'hdr-off'} color="white" size={24} />
           </PressableOpacity>
         )}
         {canToggleNightMode && (
@@ -269,9 +286,13 @@ export default function CameraPage(): React.ReactElement {
             <IonIcon name={enableNightMode ? 'moon' : 'moon-outline'} color="white" size={24} />
           </PressableOpacity>
         )}
-        <PressableOpacity style={styles.button} onPress={() => navigation.navigate('Devices')}>
-          <IonIcon name="settings-outline" color="white" size={24} />
+        <PressableOpacity style={styles.button} >
+          <Link href="/media">
+            <IonIcon name="settings-outline" color="white" size={24} />
+          </Link>
         </PressableOpacity>
+
+
       </View>
     </View>
   );
