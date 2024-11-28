@@ -110,6 +110,14 @@ export default function MediaPage(): React.ReactElement {
                 {savingState === 'saving' && <ActivityIndicator color="white" />}
             </PressableOpacity>
 
+            <PressableOpacity style={styles.closeButton} onPress={() => {navigation.navigate('summary', {
+                imageUri: path
+            })}}>
+                <IonIcon name="checkmark" size={35} color="white" style={styles.icon} />
+            </PressableOpacity>
+
+
+
         </View>
     )
 }

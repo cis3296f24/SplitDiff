@@ -1,10 +1,11 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from 'react-native';
 import { useState, useEffect } from 'react';
-import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList, ScrollView, RectButton } from 'react-native-gesture-handler';
 import jsonData from '../../assets/json/image0.json'; // Adjust the path as per your project structure
 import { Ionicons } from '@expo/vector-icons';
+
+import { Input, TextArea, XStack, YStack, Label, Button } from 'tamagui'
 
 // components
 import Item from '@/components/Item';
@@ -25,6 +26,18 @@ type ItemType = {
   subItems: string[]
 }
 
+import Modal from "react-native-modal";
+function AddModal() {
+
+    return (
+        <Modal>
+            <View>
+                <Text>Add Modal</Text>
+            </View>
+        </Modal>
+    )
+}
+
 
 export default function DashboardTab() {
 
@@ -33,6 +46,12 @@ export default function DashboardTab() {
 
   const [personaName, setPersonaName] = useState<string>('');
   const [personas, setPersonas] = useState<PersonaType[]>([]);
+
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
 
   const handleAddPersona = () => {
     if (personaName.trim() !== '') {
@@ -173,9 +192,54 @@ export default function DashboardTab() {
                     )
                   })
                 }
-              <TouchableOpacity style={styles.addButton} onPress={addItem}>
+
+
+              <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
                 <Text style={styles.addButtonText}>Add Item</Text>
               </TouchableOpacity>
+
+              <Modal isVisible={isModalVisible}>
+                  <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
+                    <YStack
+                    padding="$5"
+                    backgroundColor="white"
+                    borderRadius="$4"
+                    minWidth={300}
+                    gap="$4">
+                      <XStack alignItems="center" gap="$4">
+                        <Label width={90} htmlFor="name">
+                          Item
+                        </Label>
+                        <Input flex={1} id="name" />
+                      </XStack>
+                      <XStack alignItems="center" gap="$4">
+                        <Label width={90} htmlFor="name">
+                          Price
+                        </Label>
+                        <Input flex={1} id="price" keyboardType='numeric'
+                        inputMode='decimal'/>
+                      </XStack>
+                      <XStack alignItems="center" gap="$4">
+                        <Label width={90} htmlFor="name">
+                          Quantity
+                        </Label>
+                        <Input flex={1} id="quantity" keyboardType='numeric'
+                        inputMode='numeric'/>
+                      </XStack>
+                      <XStack alignItems="center" justifyContent='center' gap="$4">
+                        <Button size="$3"
+                        variant="outlined"
+                        onPress={toggleModal}>
+                            Cancel
+                        </Button>
+                        <Button size="$3"
+                        theme="active">
+                            Add Item
+                        </Button>
+                      </XStack>
+                    </YStack>
+                  </View>
+              </Modal>
 
               </View>
           )
