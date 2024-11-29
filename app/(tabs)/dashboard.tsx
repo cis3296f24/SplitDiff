@@ -6,9 +6,11 @@ import jsonData from '../../assets/json/image0.json'; // Adjust the path as per 
 import { Ionicons } from '@expo/vector-icons';
 
 import { Input, TextArea, XStack, YStack, Label, Button } from 'tamagui'
+import { useForm, Controller } from "react-hook-form";
 
 // components
 import Item from '@/components/Item';
+import AddModal from '@/components/AddModal';
 
 // utils
 import { analyzeImage, pickImage } from '@/utils/image';
@@ -27,16 +29,6 @@ type ItemType = {
 }
 
 import Modal from "react-native-modal";
-function AddModal() {
-
-    return (
-        <Modal>
-            <View>
-                <Text>Add Modal</Text>
-            </View>
-        </Modal>
-    )
-}
 
 
 export default function DashboardTab() {
@@ -48,10 +40,31 @@ export default function DashboardTab() {
   const [personas, setPersonas] = useState<PersonaType[]>([]);
 
   const [isModalVisible, setModalVisible] = useState(false);
+  const { control, handleSubmit, formState: { errors } } = useForm({
+    defaultValues: {
+      name: '',
+      price: 0,
+      quantity: 0
+    }
+  });
 
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
   };
+
+  const handleModalSubmit = (data: any) => {
+    console.log('Modal data:', data);
+    const newItem = {
+      id: items!.length + 1,
+      name: data.name,
+      cost: data.price,
+      quantity: data.quantity,
+      subItems: []
+    }
+    addItem(newItem);
+    toggleModal();
+  }
+  const onInvalid = (errors: any) => console.error(errors)
 
   const handleAddPersona = () => {
     if (personaName.trim() !== '') {
@@ -72,10 +85,10 @@ export default function DashboardTab() {
     if (!items) return;
     setItems(items.filter((item) => item.id != itemId));
   };
-  const addItem = () => {
-    console.log('Adding item');
+  const addItem = (item: ItemType) => {
+    if (!items) return;
+    setItems([...items, item]);
   };
-
 
   function parseText(data: any) {
 
@@ -135,6 +148,11 @@ export default function DashboardTab() {
     // <SafeAreaView>
     <View style={{ flex: 1 }}>
       <ScrollView>
+
+        <AddModal
+          isModalVisible={isModalVisible}
+          toggleModal={toggleModal}
+          onAddItem={addItem}/>
         {imageUri && (
           <Image
             source={{uri: imageUri}}
@@ -177,6 +195,7 @@ export default function DashboardTab() {
       </TouchableOpacity>
 
 
+
         {
           items && (
               <View>
@@ -193,53 +212,104 @@ export default function DashboardTab() {
                   })
                 }
 
-
               <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
                 <Text style={styles.addButtonText}>Add Item</Text>
               </TouchableOpacity>
 
-              <Modal isVisible={isModalVisible}>
+
+
+              {/* <Modal isVisible={isModalVisible}>
                   <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
-                    <YStack
-                    padding="$5"
-                    backgroundColor="white"
-                    borderRadius="$4"
-                    minWidth={300}
-                    gap="$4">
-                      <XStack alignItems="center" gap="$4">
-                        <Label width={90} htmlFor="name">
-                          Item
-                        </Label>
-                        <Input flex={1} id="name" />
-                      </XStack>
-                      <XStack alignItems="center" gap="$4">
-                        <Label width={90} htmlFor="name">
-                          Price
-                        </Label>
-                        <Input flex={1} id="price" keyboardType='numeric'
-                        inputMode='decimal'/>
-                      </XStack>
-                      <XStack alignItems="center" gap="$4">
-                        <Label width={90} htmlFor="name">
-                          Quantity
-                        </Label>
-                        <Input flex={1} id="quantity" keyboardType='numeric'
-                        inputMode='numeric'/>
-                      </XStack>
-                      <XStack alignItems="center" justifyContent='center' gap="$4">
-                        <Button size="$3"
-                        variant="outlined"
-                        onPress={toggleModal}>
-                            Cancel
-                        </Button>
-                        <Button size="$3"
-                        theme="active">
-                            Add Item
-                        </Button>
-                      </XStack>
-                    </YStack>
+                      <YStack
+                      padding="$5"
+                      backgroundColor="white"
+                      borderRadius="$4"
+                      minWidth={300}
+                      gap="$4">
+                        <XStack alignItems="center" gap="$4">
+                          <Label width={90} htmlFor="name">
+                            Item
+                          </Label>
+                          <Controller
+                            control={control}
+                            rules={{
+                              required: { value: true, message: "Required" },
+                            }}
+                            render={({ field: { onChange, onBlur, value } }) => (
+                              <Input flex={1}
+                              onBlur={onBlur}
+                              onChangeText={value => onChange(value)}
+                              value={value} />
+                            )}
+                            name="name"
+                          />
+                        </XStack>
+                        {errors.name && <Text>{errors.name.message}</Text>}
+
+                        <XStack alignItems="center" gap="$4">
+                          <Label width={90} htmlFor="name">
+                            Price
+                          </Label>
+                          <Controller
+                            control={control}
+                            rules={{
+                              required: { value: true, message: "Required" },
+                              // validate: (value) => value > 0,
+                            }}
+                            render={({ field: { onChange, onBlur, value } }) => (
+                              <Input flex={1}
+                              onBlur={onBlur}
+                              onChangeText={value => onChange(+value)}
+                              value={value}
+                              type = 'number'
+                              keyboardType='decimal-pad' inputMode='decimal'/>
+                            )}
+                            name="price"
+                          />
+                        </XStack>
+                        {errors.price && <Text>{errors.price.message}</Text>}
+
+                        <XStack alignItems="center" gap="$4">
+                          <Label width={90} htmlFor="name">
+                            Quantity
+                          </Label>
+                          <Controller
+                            control={control}
+                            rules={{
+                              required: { value: true, message: "Required" },
+                              maxLength: { value: 12, message: "Max Length" },
+                              // validate: (value) => value > 0,
+                            }}
+                            render={({ field: {onChange, onBlur, value} }) => (
+                              <Input flex={1}
+                              onBlur={onBlur}
+                              onChangeText={value => onChange(+value)}
+                              value={value}
+                              type = 'number'
+                              keyboardType='numeric' inputMode='numeric'/>
+                            )}
+                            name="quantity"
+                          />
+                        </XStack>
+                        {errors.quantity && <Text>{errors.quantity.message}</Text>}
+
+                        <XStack alignItems="center" justifyContent='center' gap="$4">
+                          <Button size="$3"
+                          variant="outlined"
+                          onPress={toggleModal}>
+                              Cancel
+                          </Button>
+                          <Button
+                          size="$3"
+                          theme="active"
+                          onPress={handleSubmit(handleModalSubmit, onInvalid)}>
+                              Add Item
+                          </Button>
+                        </XStack>
+
+                      </YStack>
                   </View>
-              </Modal>
+              </Modal> */}
 
               </View>
           )
