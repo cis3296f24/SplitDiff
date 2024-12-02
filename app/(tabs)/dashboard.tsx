@@ -1,16 +1,18 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from 'react-native';
 import { useState, useEffect } from 'react';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system'
-import { analyzeImage } from '@/utils/image';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatList, ScrollView, RectButton } from 'react-native-gesture-handler';
+import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import jsonData from '../../assets/json/image0.json'; // Adjust the path as per your project structure
 import { Ionicons } from '@expo/vector-icons';
 
+import { Input, TextArea, XStack, YStack, Label, Button } from 'tamagui'
+
 // components
 import Item from '@/components/Item';
+import AddEditModal from '@/components/AddModal';
 
+// utils
+import { analyzeImage, pickImage } from '@/utils/image';
 
 type PersonaType = {
   id: string;
@@ -22,8 +24,8 @@ type ItemType = {
   cost: number,
   name: string,
   quantity: number,
+  subItems: string[]
 }
-
 
 export default function DashboardTab() {
 
@@ -33,21 +35,10 @@ export default function DashboardTab() {
   const [personaName, setPersonaName] = useState<string>('');
   const [personas, setPersonas] = useState<PersonaType[]>([]);
 
-  const pickImage = async () => {
-    try {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
+  const [isModalVisible, setModalVisible] = useState(false);
 
-      if (!result.canceled) {
-        setImageUri(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-    }
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
   };
 
   const handleAddPersona = () => {
@@ -69,22 +60,24 @@ export default function DashboardTab() {
     if (!items) return;
     setItems(items.filter((item) => item.id != itemId));
   };
-  const addItem = () => {
-    console.log('Adding item');
+  const addItem = (item: ItemType) => {
+    if (!items) return;
+    setItems([...items, item]);
   };
-
 
   function parseText(data: any) {
 
-    const with_quantity_regex = /^\s*(\d+)\s+(.*\S)\s+(\(?)\$([0-9.]+)\)?\s*$/;
-    const no_quantity_regex = /(.*\S)\s+(\(?)\$([0-9.]+)\)?\s*$/;
+    const with_quantity_regex = /^\s*(\d+)\s+(.*\S)\s+(\(?)([0-9.]+)\)?\s*$/;
+    const no_quantity_regex = /(.*\S)\s+(\(?)([0-9.]+)\)?\s*$/;
+    const remove_special_char_regex = /[!@#$%^&*]/g;
 
     const items: ItemType[] = [];
-
     let id = 0;
     for (const line of data.Items.valueArray) {
 
-      const parsed_line = line.content.replace(/\n/g, ' ');
+      let parsed_line = line.content.replace(/\n/g, ' ');
+      parsed_line = parsed_line.replace(remove_special_char_regex, '');
+
 
       if (with_quantity_regex.test(parsed_line)) {
         const match = parsed_line.match(with_quantity_regex);
@@ -99,6 +92,7 @@ export default function DashboardTab() {
           cost: cost,
           name: name,
           quantity: quantity,
+          subItems: ["fries", "chocolate cake"]
         });
       }
       else if (no_quantity_regex.test(parsed_line)) {
@@ -113,10 +107,13 @@ export default function DashboardTab() {
           cost: cost,
           name: name,
           quantity: quantity,
+          subItems: []
         });
       }
+      else {
+        console.log('No match found for line:', parsed_line);
+      }
     }
-
     return items;
   }
 
@@ -124,6 +121,13 @@ export default function DashboardTab() {
     // <SafeAreaView>
     <View style={{ flex: 1 }}>
       <ScrollView>
+
+        <AddEditModal
+          isModalVisible={isModalVisible}
+          toggleModal={toggleModal}
+          onAddItem={addItem}
+          items={items}/>
+
         {imageUri && (
           <Image
             source={{uri: imageUri}}
@@ -131,7 +135,12 @@ export default function DashboardTab() {
           />
         )}
         <TouchableOpacity
-          onPress={pickImage}
+          onPress={async () => {
+            const res = await pickImage();
+            if (res) {
+              setImageUri(res);
+            }
+          }}
         >
           <Text>Choose an Image</Text>
         </TouchableOpacity>
@@ -153,13 +162,11 @@ export default function DashboardTab() {
         <TouchableOpacity
         onPress={() => {
           // Load bundled JSON file for testing
-          // console.log(jsonData);
           setItems(parseText(jsonData.analyzeResult.documents[0].fields));
         }}
       >
         <Text>Extract info from Bundled JSON</Text>
       </TouchableOpacity>
-
 
         {
           items && (
@@ -172,25 +179,24 @@ export default function DashboardTab() {
                     return (
                       <Item key={item.ind} data={item}
                       onDelete={removeItem}
-                      onEdit={removeItem} />
+                      onEdit={editItem} />
                     )
                   })
                 }
 
+              <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
+                <Text style={styles.addButtonText}>Add Item</Text>
+              </TouchableOpacity>
+
               </View>
           )
-
         }
 
       </ScrollView>
 {/* Bottom bar for adding personas */}
     {items && (
         <>
-          <View>
-            <TouchableOpacity style={styles.addButton} onPress={addItem}>
-                <Text style={styles.addButtonText}>Add Item</Text>
-              </TouchableOpacity>
-          </View>
+
           <View style={styles.bottomBar}>
             <TextInput
               style={styles.textInput}
