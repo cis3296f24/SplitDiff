@@ -4,7 +4,7 @@ import { View, Text } from 'react-native';
 import { Input, XStack, YStack, Label, Button } from 'tamagui'
 import { useForm, Controller } from "react-hook-form";
 
-export default function AddModal({ isModalVisible, toggleModal, onAddItem }) {
+export default function AddEditModal({ isModalVisible, toggleModal, onAddItem, items }) {
 
     const { control, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
@@ -18,11 +18,11 @@ export default function AddModal({ isModalVisible, toggleModal, onAddItem }) {
 
     const handleModalSubmit = (data: any) => {
         const newItem = {
-        id: items!.length + 1,
-        name: data.name,
-        cost: data.price,
-        quantity: data.quantity,
-        subItems: []
+            id: items!.length + 1,
+            name: data.name,
+            cost: data.price,
+            quantity: data.quantity,
+            subItems: []
         }
         onAddItem(newItem);
         toggleModal();

@@ -1,16 +1,15 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from 'react-native';
 import { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatList, ScrollView, RectButton } from 'react-native-gesture-handler';
+import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import jsonData from '../../assets/json/image0.json'; // Adjust the path as per your project structure
 import { Ionicons } from '@expo/vector-icons';
 
 import { Input, TextArea, XStack, YStack, Label, Button } from 'tamagui'
-import { useForm, Controller } from "react-hook-form";
 
 // components
 import Item from '@/components/Item';
-import AddModal from '@/components/AddModal';
+import AddEditModal from '@/components/AddModal';
 
 // utils
 import { analyzeImage, pickImage } from '@/utils/image';
@@ -28,9 +27,6 @@ type ItemType = {
   subItems: string[]
 }
 
-import Modal from "react-native-modal";
-
-
 export default function DashboardTab() {
 
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -40,31 +36,10 @@ export default function DashboardTab() {
   const [personas, setPersonas] = useState<PersonaType[]>([]);
 
   const [isModalVisible, setModalVisible] = useState(false);
-  const { control, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: {
-      name: '',
-      price: 0,
-      quantity: 0
-    }
-  });
 
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
   };
-
-  const handleModalSubmit = (data: any) => {
-    console.log('Modal data:', data);
-    const newItem = {
-      id: items!.length + 1,
-      name: data.name,
-      cost: data.price,
-      quantity: data.quantity,
-      subItems: []
-    }
-    addItem(newItem);
-    toggleModal();
-  }
-  const onInvalid = (errors: any) => console.error(errors)
 
   const handleAddPersona = () => {
     if (personaName.trim() !== '') {
@@ -139,8 +114,6 @@ export default function DashboardTab() {
         console.log('No match found for line:', parsed_line);
       }
     }
-
-    console.log(items);
     return items;
   }
 
@@ -149,10 +122,12 @@ export default function DashboardTab() {
     <View style={{ flex: 1 }}>
       <ScrollView>
 
-        <AddModal
+        <AddEditModal
           isModalVisible={isModalVisible}
           toggleModal={toggleModal}
-          onAddItem={addItem}/>
+          onAddItem={addItem}
+          items={items}/>
+
         {imageUri && (
           <Image
             source={{uri: imageUri}}
@@ -187,14 +162,11 @@ export default function DashboardTab() {
         <TouchableOpacity
         onPress={() => {
           // Load bundled JSON file for testing
-          // console.log(jsonData);
           setItems(parseText(jsonData.analyzeResult.documents[0].fields));
         }}
       >
         <Text>Extract info from Bundled JSON</Text>
       </TouchableOpacity>
-
-
 
         {
           items && (
@@ -216,104 +188,8 @@ export default function DashboardTab() {
                 <Text style={styles.addButtonText}>Add Item</Text>
               </TouchableOpacity>
 
-
-
-              {/* <Modal isVisible={isModalVisible}>
-                  <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
-                      <YStack
-                      padding="$5"
-                      backgroundColor="white"
-                      borderRadius="$4"
-                      minWidth={300}
-                      gap="$4">
-                        <XStack alignItems="center" gap="$4">
-                          <Label width={90} htmlFor="name">
-                            Item
-                          </Label>
-                          <Controller
-                            control={control}
-                            rules={{
-                              required: { value: true, message: "Required" },
-                            }}
-                            render={({ field: { onChange, onBlur, value } }) => (
-                              <Input flex={1}
-                              onBlur={onBlur}
-                              onChangeText={value => onChange(value)}
-                              value={value} />
-                            )}
-                            name="name"
-                          />
-                        </XStack>
-                        {errors.name && <Text>{errors.name.message}</Text>}
-
-                        <XStack alignItems="center" gap="$4">
-                          <Label width={90} htmlFor="name">
-                            Price
-                          </Label>
-                          <Controller
-                            control={control}
-                            rules={{
-                              required: { value: true, message: "Required" },
-                              // validate: (value) => value > 0,
-                            }}
-                            render={({ field: { onChange, onBlur, value } }) => (
-                              <Input flex={1}
-                              onBlur={onBlur}
-                              onChangeText={value => onChange(+value)}
-                              value={value}
-                              type = 'number'
-                              keyboardType='decimal-pad' inputMode='decimal'/>
-                            )}
-                            name="price"
-                          />
-                        </XStack>
-                        {errors.price && <Text>{errors.price.message}</Text>}
-
-                        <XStack alignItems="center" gap="$4">
-                          <Label width={90} htmlFor="name">
-                            Quantity
-                          </Label>
-                          <Controller
-                            control={control}
-                            rules={{
-                              required: { value: true, message: "Required" },
-                              maxLength: { value: 12, message: "Max Length" },
-                              // validate: (value) => value > 0,
-                            }}
-                            render={({ field: {onChange, onBlur, value} }) => (
-                              <Input flex={1}
-                              onBlur={onBlur}
-                              onChangeText={value => onChange(+value)}
-                              value={value}
-                              type = 'number'
-                              keyboardType='numeric' inputMode='numeric'/>
-                            )}
-                            name="quantity"
-                          />
-                        </XStack>
-                        {errors.quantity && <Text>{errors.quantity.message}</Text>}
-
-                        <XStack alignItems="center" justifyContent='center' gap="$4">
-                          <Button size="$3"
-                          variant="outlined"
-                          onPress={toggleModal}>
-                              Cancel
-                          </Button>
-                          <Button
-                          size="$3"
-                          theme="active"
-                          onPress={handleSubmit(handleModalSubmit, onInvalid)}>
-                              Add Item
-                          </Button>
-                        </XStack>
-
-                      </YStack>
-                  </View>
-              </Modal> */}
-
               </View>
           )
-
         }
 
       </ScrollView>
