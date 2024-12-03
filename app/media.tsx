@@ -67,6 +67,15 @@ export default function MediaPage(): React.ReactElement {
         }
     }, [path, type])
 
+    const onSubmitImage = useCallback(
+        (media_uri: string, type: 'photo') => {
+            navigation.navigate('summary', {
+                path: media_uri,
+                type: type,
+            })
+        },
+    [navigation])
+
     const source = useMemo(() => ({ uri: `file://${path}` }), [path])
 
     const screenStyle = useMemo(() => ({ opacity: hasMediaLoaded ? 1 : 0 }), [hasMediaLoaded])
@@ -78,6 +87,7 @@ export default function MediaPage(): React.ReactElement {
         }
         analyzeImage(path as string).then((res) => {
             // TODO CHECK if RES is empty object
+
             console.log("done analyzing", res)
         });
 
@@ -101,19 +111,17 @@ export default function MediaPage(): React.ReactElement {
             )}
 
             <PressableOpacity style={styles.closeButton} onPress={() => {navigation.goBack()}}>
-                <IonIcon name="close" size={35} color="white" style={styles.icon} />
+                <IonIcon name="close" size={35} color="black" style={styles.icon} />
             </PressableOpacity>
 
             <PressableOpacity style={styles.saveButton} onPress={onSavePressed} disabled={savingState !== 'none'}>
-                {savingState === 'none' && <IonIcon name="download" size={35} color="white" style={styles.icon} />}
-                {savingState === 'saved' && <IonIcon name="checkmark" size={35} color="white" style={styles.icon} />}
-                {savingState === 'saving' && <ActivityIndicator color="white" />}
+                {savingState === 'none' && <IonIcon name="download" size={35} color="black" style={styles.icon} />}
+                {savingState === 'saved' && <IonIcon name="checkmark" size={35} color="black" style={styles.icon} />}
+                {savingState === 'saving' && <ActivityIndicator color="black" />}
             </PressableOpacity>
 
-            <PressableOpacity style={styles.closeButton} onPress={() => {navigation.navigate('summary', {
-                imageUri: path
-            })}}>
-                <IonIcon name="checkmark" size={35} color="white" style={styles.icon} />
+            <PressableOpacity style={styles.confirmButton} onPress={() => {onSubmitImage(path as string, "photo")}}>
+                <IonIcon name="checkmark" size={35} color="black" style={styles.icon} />
             </PressableOpacity>
 
 
@@ -133,6 +141,13 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: SAFE_AREA_PADDING.paddingTop,
         left: SAFE_AREA_PADDING.paddingLeft,
+        width: 40,
+        height: 40,
+    },
+    confirmButton: {
+        position: 'absolute',
+        top: SAFE_AREA_PADDING.paddingTop,
+        right: SAFE_AREA_PADDING.paddingRight,
         width: 40,
         height: 40,
     },

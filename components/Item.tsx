@@ -11,10 +11,8 @@ import Reanimated, {
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
-import { PressableOpacity } from 'react-native-pressable-opacity';
 
 // type
-import type { DocumentFieldOutput } from '@azure-rest/ai-document-intelligence';
 
 
 function Item({ data, onEdit, onDelete }) {
@@ -28,7 +26,8 @@ function Item({ data, onEdit, onDelete }) {
 
     return (
         <Reanimated.View
-        style={styleAnimation}>
+        style={styleAnimation}
+        key={data.id}>
           <View
           style={styles.rightActionContainer}>
               <Pressable

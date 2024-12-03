@@ -1,10 +1,63 @@
 import * as FileSystem from 'expo-file-system'
 import * as ImagePicker from 'expo-image-picker';
 import DocumentIntelligence, {getLongRunningPoller, isUnexpected, AnalyzeResultOperationOutput} from "@azure-rest/ai-document-intelligence";
-
+import { ItemType } from '@/constants/types';
 
 const apiKey = 'b88f5cb59eb84018b0c68dfa58f78cc0';
 const endpoint = 'https://eastus.api.cognitive.microsoft.com/';
+
+
+function parseText(data: any) {
+
+    const with_quantity_regex = /^\s*(\d+)\s+(.*\S)\s+(\(?)([0-9.]+)\)?\s*$/;
+    const no_quantity_regex = /(.*\S)\s+(\(?)([0-9.]+)\)?\s*$/;
+    const remove_special_char_regex = /[!@#$%^&*]/g;
+
+    const items: ItemType[] = [];
+    let id = 0;
+    for (const line of data.Items.valueArray) {
+
+    let parsed_line = line.content.replace(/\n/g, ' ');
+    parsed_line = parsed_line.replace(remove_special_char_regex, '');
+
+
+    if (with_quantity_regex.test(parsed_line)) {
+        const match = parsed_line.match(with_quantity_regex);
+        if (!match)  return;
+
+        const quantity = parseInt(match[1]);
+        const name = match[2];
+        const cost = parseFloat(match[4]);
+
+        items.push({
+            id: id++,
+            cost: cost,
+            name: name,
+            quantity: quantity,
+            subItems: ["fries", "chocolate cake"]
+        });
+    }
+    else if (no_quantity_regex.test(parsed_line)) {
+        const match = parsed_line.match(no_quantity_regex);
+        if (!match) return
+        const quantity = 1;
+        const name = match[1];
+        const cost = parseFloat(match[3]);
+
+        items.push({
+            id: id++,
+            cost: cost,
+            name: name,
+            quantity: quantity,
+            subItems: []
+        });
+    }
+    else {
+        console.log('No match found for line:', parsed_line);
+    }
+    }
+    return items;
+}
 
 async function pickImage() {
     try {
@@ -72,4 +125,4 @@ async function analyzeImage(imageUri: string) {
 
 };
 
-export { analyzeImage, pickImage };
+export { analyzeImage, pickImage, parseText };
