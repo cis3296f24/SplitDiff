@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, } from 'react'
 import type { ImageLoadEventData, NativeSyntheticEvent } from 'react-native'
 import { StyleSheet, View, ActivityIndicator, PermissionsAndroid, Platform, Image } from 'react-native'
 import { SAFE_AREA_PADDING } from '@/constants/Camera'
@@ -80,16 +80,19 @@ export default function MediaPage(): React.ReactElement {
 
     const screenStyle = useMemo(() => ({ opacity: hasMediaLoaded ? 1 : 0 }), [hasMediaLoaded])
 
+
     useEffect(() => {
         if (path == null) {
             Alert.alert('No media path!', 'No media path was provided to MediaPage.')
             navigation.goBack()
         }
-        analyzeImage(path as string).then((res) => {
-            // TODO CHECK if RES is empty object
 
-            console.log("done analyzing", res)
-        });
+        analyzeImage(path as string)
+        .catch((error) => {
+            Alert.alert('Error', 'No receipt Found')
+            console.log("Error No receipt Found")
+        })
+
 
     }, [source])
 

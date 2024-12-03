@@ -5,21 +5,22 @@ import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import jsonData from '../../assets/json/image0.json'; // Adjust the path as per your project structure
 import { Ionicons } from '@expo/vector-icons';
 
-import { Input, TextArea, XStack, YStack, Label, Button } from 'tamagui'
+import { useNavigation } from 'expo-router'
 
 // components
 import Item from '@/components/Item';
 import AddEditModal from '@/components/AddModal';
 
 // utils
-import { analyzeImage, pickImage, parseText } from '@/utils/image';
+import { pickImage, parseText } from '@/utils/image';
 
 // types
 import { ItemType, PersonaType } from '@/constants/types';
 
 export default function DashboardTab() {
 
-  const [imageUri, setImageUri] = useState<string | null>(null);
+  const navigation = useNavigation<any>();
+
   const [items, setItems] = useState<ItemType[]>();
 
   const [personaName, setPersonaName] = useState<string>('');
@@ -65,36 +66,20 @@ export default function DashboardTab() {
           onAddItem={addItem}
           items={items}/>
 
-        {imageUri && (
-          <Image
-            source={{uri: imageUri}}
-            style = {{width: 300, height: 300}}
-          />
-        )}
         <TouchableOpacity
           onPress={async () => {
             const res = await pickImage();
+
             if (res) {
-              setImageUri(res);
+              navigation.navigate('media', {
+                  path: res,
+                  type: "photo",
+              })
             }
           }}
         >
           <Text>Choose an Image</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={ () => {
-            analyzeImage(imageUri as string)
-            .then((response) => {
-              setItems(parseText(response));
-            })
-            ;
-
-          }}
-        >
-          <Text>Extract info from Image</Text>
-        </TouchableOpacity>
-
 
         <TouchableOpacity
         onPress={() => {

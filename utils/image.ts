@@ -99,8 +99,6 @@ async function analyzeImage(imageUri: string) {
         queryParameters: { locale: "en-IN" },
     });
 
-
-    console.log("Initial response:", initialResponse.body);
     if (isUnexpected(initialResponse)) {
         throw initialResponse.body.error;
     }
@@ -112,16 +110,12 @@ async function analyzeImage(imageUri: string) {
     const documents = result?.documents;
     const document = documents && documents[0];
 
-        console.log("Document fields:", document);
-
     // Use of PrebuiltModels.Receipt above (rather than the raw model ID), as it adds strong typing of the model's output
     if (document) {
-        console.log("Document fields:", document);
         return document.fields;
     } else {
         throw new Error("Expected at least one receipt in the result.");
     }
-
 
 };
 
