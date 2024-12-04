@@ -1,6 +1,7 @@
 type PersonaType = {
     id: string;
     name: string;
+    selectedItems: number[];
 };
 
 type ItemType = {
@@ -8,7 +9,8 @@ type ItemType = {
     cost: number,
     name: string,
     quantity: number,
-    subItems: string[]
+    subItems: string[],
+    assignedPersonas?: string[];
 }
 
 export { PersonaType, ItemType };
