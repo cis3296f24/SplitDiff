@@ -25,6 +25,7 @@ export default function DashboardTab() {
   const [personas, setPersonas] = useState<PersonaType[]>([]);
   const [selectedPersona, setSelectedPersona] = useState<PersonaType | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
+  const [billSplitResults, setBillSplitResults] = useState<{[key: string]: number} | null>(null);
 
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
@@ -102,6 +103,95 @@ export default function DashboardTab() {
       .filter(Boolean)
       .join(', ');
   };
+
+  const splitBill = () => {
+    // Detailed validation with comprehensive error reporting
+    if (personas.length === 0) {
+      Alert.alert('Error', 'Please add at least one persona.');
+      return;
+    }
+
+    if (items.length === 0) {
+      Alert.alert('Error', 'Please add at least one item.');
+      return;
+    }
+
+    // Detailed item validation
+    const problemItems = items.filter(item => {
+      // Check for invalid or missing price
+      const invalidPrice = 
+        item.price === undefined || 
+        item.price === null || 
+        item.price === 0 || 
+        isNaN(Number(item.price));
+
+      // Check for no assigned personas
+      const noPersonasAssigned = 
+        !item.assignedPersonas || 
+        item.assignedPersonas.length === 0;
+
+      return invalidPrice || noPersonasAssigned;
+    });
+
+    // If there are problematic items, provide detailed error
+    if (problemItems.length > 0) {
+      const errorDetails = problemItems.map(item => {
+        const priceStatus = item.price === undefined ? 'No price' : 
+                            item.price === null ? 'Null price' : 
+                            item.price === 0 ? 'Zero price' : 
+                            isNaN(Number(item.price)) ? 'Invalid price' : 'Valid price';
+        
+        const personaStatus = !item.assignedPersonas ? 'No personas array' :
+                               item.assignedPersonas.length === 0 ? 'No personas assigned' : 'Personas assigned';
+        
+        return `Item: ${item.name || 'Unnamed'} (Price: ${priceStatus}, Personas: ${personaStatus})`;
+      }).join('\n');
+
+      Alert.alert(
+        'Bill Splitting Error', 
+        'Some items are missing price or persona assignments:\n\n' + errorDetails
+      );
+      return;
+    }
+
+    // Calculate bill split
+    const billSplit: {[key: string]: number} = {};
+
+    // Initialize bill split with zero for each persona
+    personas.forEach(persona => {
+      billSplit[persona.name] = 0;
+    });
+
+    // Calculate each person's share
+    items.forEach(item => {
+      // Ensure price is a valid number and personas are assigned
+      const itemPrice = Number(item.price);
+      
+      // Calculate split price for this item
+      const splitPrice = itemPrice / item.assignedPersonas.length;
+
+      // Add split price to each assigned persona
+      item.assignedPersonas.forEach(personaId => {
+        const persona = personas.find(p => p.id === personaId);
+        if (persona) {
+          billSplit[persona.name] += splitPrice;
+        }
+      });
+    });
+
+    // Round to 2 decimal places
+    Object.keys(billSplit).forEach(key => {
+      billSplit[key] = Number(billSplit[key].toFixed(2));
+    });
+
+    // Navigate to bill split results screen
+    navigation.navigate('billsplit', { billSplit });
+    
+    // Optional: Also store results locally
+    setBillSplitResults(billSplit);
+  };
+
+  // Rest of the component remains the same as in your original code
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -183,20 +273,9 @@ export default function DashboardTab() {
 
             <TouchableOpacity 
               style={styles.doneButton} 
-              onPress={() => {
-                // Optional: Implement split logic
-                const splitDetails = items.map(item => ({
-                  item: item.name,
-                  assignedPersonas: item.assignedPersonas 
-                    ? item.assignedPersonas.map(id => 
-                        personas.find(p => p.id === id)?.name
-                      )
-                    : []
-                }));
-                
-                alert(JSON.stringify(splitDetails, null, 2));
-              }}
+              onPress={splitBill}
             >
+              <Text style={styles.doneButtonText}>Split Bill</Text>
               <Ionicons name="arrow-forward" size={17} color="white" />
             </TouchableOpacity>
           </View>
@@ -240,6 +319,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
+  },
+  doneButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginLeft: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    color: 'white',
+    marginRight: 5,
   },
   itemRow: {
     flexDirection: 'row',
