@@ -13,4 +13,9 @@ type ItemType = {
     assignedPersonas?: string[];
 }
 
-export { PersonaType, ItemType };
+type SplitResult = {
+    name: string;
+    amount: number;
+}
+
+export { PersonaType, ItemType, SplitResult };
