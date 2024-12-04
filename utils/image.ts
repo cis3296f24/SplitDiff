@@ -6,6 +6,15 @@ import { ItemType } from '@/constants/types';
 const apiKey = 'b88f5cb59eb84018b0c68dfa58f78cc0';
 const endpoint = 'https://eastus.api.cognitive.microsoft.com/';
 
+function isEmpty(obj: any) {
+    for (const prop in obj) {
+        if (Object.hasOwn(obj, prop)) {
+        return false;
+        }
+    }
+
+    return true;
+}
 
 function parseText(data: any) {
 
@@ -112,6 +121,9 @@ async function analyzeImage(imageUri: string) {
 
     // Use of PrebuiltModels.Receipt above (rather than the raw model ID), as it adds strong typing of the model's output
     if (document) {
+        if (isEmpty(document.fields)) {
+            throw new Error("No receipt found in the image.");
+        }
         return document.fields;
     } else {
         throw new Error("Expected at least one receipt in the result.");

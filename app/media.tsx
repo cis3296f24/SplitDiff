@@ -9,7 +9,7 @@ import { CameraRoll } from '@react-native-camera-roll/camera-roll'
 import { useLocalSearchParams, useNavigation } from 'expo-router'
 
 // utils
-import { analyzeImage } from '@/utils/image'
+import { pickImage, analyzeImage } from '@/utils/image'
 
 
 const requestSavePermission = async (): Promise<boolean> => {
@@ -37,6 +37,7 @@ export default function MediaPage(): React.ReactElement {
     const [hasMediaLoaded, setHasMediaLoaded] = useState(false)
 
     const [savingState, setSavingState] = useState<'none' | 'saving' | 'saved'>('none')
+    const [submitState, setSubmitState] = useState<'loading' | 'submit'>('loading')
 
     const onMediaLoad = useCallback((event: OnLoadData | OnLoadImage) => {
         const source = event.nativeEvent.source
@@ -88,11 +89,28 @@ export default function MediaPage(): React.ReactElement {
         }
 
         analyzeImage(path as string)
-        .catch((error) => {
-            Alert.alert('Error', 'No receipt Found')
-            console.log("Error No receipt Found")
+        .then((res) =>{
+            setSubmitState('submit')
         })
-
+        .catch((error) => {
+            Alert.alert(
+                'Error',
+                'No Receipt Found',
+                [
+                    {text: 'Retake Picture', onPress: () => navigation.goBack()},
+                    {text: 'Pick Image', onPress:  async () => {
+                        let res = await pickImage();
+                        if (res) {
+                            res = res.replace('file://', '');
+                            navigation.navigate('media', {
+                                path: res,
+                                type: "photo",
+                            })
+                        }
+                    }},
+                ]
+            )
+        })
 
     }, [source])
 
@@ -100,10 +118,6 @@ export default function MediaPage(): React.ReactElement {
     return (
         <View style={[styles.container, screenStyle]}>
             {type === 'photo' && (
-                // <Image source={source} style={StyleSheet.absoluteFill}
-                // resizeMode="cover"
-                // onLoadEnd={onMediaLoadEnd}
-                // onLoad={onMediaLoad} />
                 <Image
                 source={source}
                 style = {{width: 300, height: 300}}
@@ -124,10 +138,9 @@ export default function MediaPage(): React.ReactElement {
             </PressableOpacity>
 
             <PressableOpacity style={styles.confirmButton} onPress={() => {onSubmitImage(path as string, "photo")}}>
-                <IonIcon name="checkmark" size={35} color="black" style={styles.icon} />
+                {submitState === 'loading' && <ActivityIndicator color="black" />}
+                {submitState === 'submit' && <IonIcon name="checkmark" size={35} color="black" style={styles.icon} />}
             </PressableOpacity>
-
-
 
         </View>
     )
