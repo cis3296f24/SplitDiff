@@ -18,15 +18,12 @@ import { pickImage, parseText } from '@/utils/image';
 import { ItemType, PersonaType } from '@/constants/types';
 
 export default function DashboardTab() {
-
   const navigation = useNavigation<any>();
 
   const [items, setItems] = useState<ItemType[]>([]);
-
   const [personaName, setPersonaName] = useState<string>('');
   const [personas, setPersonas] = useState<PersonaType[]>([]);
   const [selectedPersona, setSelectedPersona] = useState<PersonaType | null>(null);
-
   const [isModalVisible, setModalVisible] = useState(false);
 
   const toggleModal = () => {
@@ -65,7 +62,7 @@ export default function DashboardTab() {
     }
 
     // Find the current item
-   const updatedItems = items.map(item => {
+    const updatedItems = items.map(item => {
       if (item.id === itemId) {
         // If item already has assignedPersonas, toggle the current persona
         const currentPersonas = item.assignedPersonas || [];
@@ -92,9 +89,18 @@ export default function DashboardTab() {
     if (!items) return;
     setItems(items.filter((item) => item.id != itemId));
   };
+
   const addItem = (item: ItemType) => {
     if (!items) return;
     setItems([...items, { ...item, assignedPersonas: [] }]);
+  };
+
+  const getAssignedPersonaNames = (item: ItemType) => {
+    if (!item.assignedPersonas || item.assignedPersonas.length === 0) return 'No one selected';
+    return item.assignedPersonas
+      .map(personaId => personas.find(p => p.id === personaId)?.name)
+      .filter(Boolean)
+      .join(', ');
   };
 
   return (
@@ -122,37 +128,44 @@ export default function DashboardTab() {
         </TouchableOpacity>
 
         <TouchableOpacity
-        onPress={() => {
-          // Load bundled JSON file for testing
-          setItems(parseText(jsonData.analyzeResult.documents[0].fields));
-        }}
-      >
-        <Text>Extract info from Bundled JSON</Text>
-      </TouchableOpacity>
+          onPress={() => {
+            // Load bundled JSON file for testing
+            setItems(parseText(jsonData.analyzeResult.documents[0].fields));
+          }}
+        >
+          <Text>Extract info from Bundled JSON</Text>
+        </TouchableOpacity>
 
-      {
-        items && (
-            <View>
-              <Text>
-                Info:
-              </Text>
-              {
-                items.map((item: any) => {
-                  return (
-                    <Item key={item.ind} data={item}
-                    onDelete={removeItem}
-                    onEdit={editItem} />
-                  )
-                })
-              }
+        {
+          items && (
+              <View>
+                <Text>Info:</Text>
+                {
+                  items.map((item: ItemType) => (
+                    <View key={item.id}>
+                      <TouchableOpacity 
+                        onPress={() => toggleItemSelection(item.id)}
+                        style={selectedPersona ? styles.selectableItem : {}}
+                      >
+                        <Item 
+                          data={item}
+                          onDelete={removeItem}
+                          onEdit={editItem} 
+                        />
+                      </TouchableOpacity>
+                      <Text style={styles.assignedPersonasText}>
+                        Assigned to: {getAssignedPersonaNames(item)}
+                      </Text>
+                    </View>
+                  ))
+                }
 
-            <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
-              <Text style={styles.addButtonText}>Add Item</Text>
-            </TouchableOpacity>
-
-            </View>
-        )
-      }
+                <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
+                  <Text style={styles.addButtonText}>Add Item</Text>
+                </TouchableOpacity>
+              </View>
+          )
+        }
       </ScrollView>
 
       {items && (
