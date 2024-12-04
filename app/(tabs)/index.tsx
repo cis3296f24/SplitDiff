@@ -15,7 +15,7 @@ export default function Home() {
     <View style={styles.container}>
       {user ? (
         <View style={styles.userInfo}>
-          <Text style={styles.email}>Welcome, {user.email}</Text>
+          <Text style={styles.email}>Welcome to SplitDiff, {user.email}</Text>
           <LineChart
           areaChart
           data={ptData}
@@ -76,7 +76,7 @@ export default function Home() {
         
         
       ) : (
-        <Text style={styles.guestText}>Welcome, Guest User!</Text>
+        <Text style={styles.guestText}>Welcome to SplitDiff!!!</Text>
       )}
     </View>
     

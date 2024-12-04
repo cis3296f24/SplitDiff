@@ -26,10 +26,11 @@ export default function DashboardTab() {
   const [selectedPersona, setSelectedPersona] = useState<PersonaType | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
   const [splitResults, setSplitResults] = useState<SplitResult[]>([]);
+  const [isInputFocused, setInputFocused] = useState(false); // Track if the input is focused
 
   useEffect(() => {
     // Calculate split results whenever items or personas change
-    if (items.length > 0 && personas.length > 0) {
+    if (items.length >= 0 && personas.length >= 0) {
       const results = calculateSplitBill(items, personas);
       setSplitResults(results);
     }
@@ -148,7 +149,7 @@ export default function DashboardTab() {
       .join(', ');
   };
 
-  const splitBill = () => {
+  const validateBill = () => {
     // Detailed validation with comprehensive error reporting
     if (personas.length === 0) {
       Alert.alert('Error', 'Please add at least one persona.');
@@ -198,8 +199,10 @@ export default function DashboardTab() {
       return;
     }
 
-    // Navigate to bill split results screen
-    navigation.navigate('billsplit', { splitResults });
+    Alert.alert(
+      'All items accounted for!', 
+    );
+
   };
 
   return (
@@ -212,28 +215,36 @@ export default function DashboardTab() {
           items={items}
         />
 
-        <TouchableOpacity onPress={async () => {
-          const res = await pickImage();
-          if (res) {
-            navigation.navigate('media', {
-              path: res,
-              type: "photo",
-            })
-          }
-        }}>
-          <Text>Choose an Image</Text>
-        </TouchableOpacity>
+<View style={styles.buttonRow}>
+  <TouchableOpacity
+    style={styles.topButton}
+    onPress={async () => {
+      const res = await pickImage();
+      if (res) {
+        navigation.navigate('media', {
+          path: res,
+          type: "photo",
+        });
+      }
+    }}
+  >
+    <Text style={styles.topButtonText}>Choose an Image</Text>
+  </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => {
-          // Load bundled JSON file for testing
-          setItems(parseText(jsonData.analyzeResult.documents[0].fields));
-        }}>
-          <Text>Extract info from Bundled JSON</Text>
-        </TouchableOpacity>
+  <TouchableOpacity
+    style={styles.topButton}
+    onPress={() => {
+      // Load bundled JSON file for testing
+      setItems(parseText(jsonData.analyzeResult.documents[0].fields));
+    }}
+  >
+    <Text style={styles.topButtonText}>Test Receipt Data</Text>
+  </TouchableOpacity>
+
+</View>
 
         {items && (
           <View>
-            <Text>Info:</Text>
             {items.map((item: ItemType) => (
               <View key={item.id}>
                 <TouchableOpacity 
@@ -247,13 +258,17 @@ export default function DashboardTab() {
                   />
                 </TouchableOpacity>
                 <Text style={styles.assignedPersonasText}>
-                  Assigned to: {getAssignedPersonaNames(item)}
+                  {getAssignedPersonaNames(item)}
                 </Text>
               </View>
             ))}
 
-            <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
-              <Text style={styles.addButtonText}>Add Item</Text>
+            <TouchableOpacity style={styles.topButton} onPress={toggleModal}>
+              <Text style={styles.topButtonText}>Add Item</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.validateButton} onPress={validateBill} >
+              <Text style={styles.topButtonText}>Validate Bill</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -277,25 +292,21 @@ export default function DashboardTab() {
       </ScrollView>
 
       {items && (
-        <>
-          <View style={styles.bottomBar}>
+        <View style={{ maxHeight: 285 }}>
+          <View style={[styles.bottomBar]}>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput]}
               placeholder="Enter persona name"
               value={personaName}
               onChangeText={setPersonaName}
+              onFocus={() => setInputFocused(true)}  
+              onBlur={() => setInputFocused(false)}    
             />
             <TouchableOpacity style={styles.addButton} onPress={handleAddPersona}>
               <Text style={styles.addButtonText}>Add Persona</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.doneButton} 
-              onPress={splitBill}
-            >
-              <Text style={styles.doneButtonText}>Split Bill</Text>
-              <Ionicons name="arrow-forward" size={17} color="white" />
-            </TouchableOpacity>
+            
           </View>
 
           <FlatList
@@ -309,7 +320,7 @@ export default function DashboardTab() {
                 ]}
                 onPress={() => setSelectedPersona(item)}
               >
-                <Text>{item.name}</Text>
+                <Text style={{ fontSize: 20 }}>{item.name}</Text>
                 <TouchableOpacity
                   style={styles.removeButton}
                   onPress={() => handleRemovePersona(item.id)}
@@ -318,9 +329,9 @@ export default function DashboardTab() {
                 </TouchableOpacity>
               </TouchableOpacity>
             )}
-            contentContainerStyle={styles.personaList}
+            contentContainerStyle={[styles.personaList, isInputFocused && styles.bottomBarTextFocused]}
           />
-        </>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -387,20 +398,28 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    marginRight: 10,
+    margin: 10,
+    height: 40,  
+  },
+  bottomBarTextFocused: {
+    height: 240,
   },
   addButton: {
     backgroundColor: '#007bff',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
+    margin:8,
   },
   addButtonText: {
+    fontSize: 15,
     color: '#fff',
     fontWeight: 'bold',
   },
   personaList: {
-    padding: 10,
+    padding: 15,
+    paddingTop: 2,
+    paddingBottom: 2,
     backgroundColor: '#f9f9f9',
   },
   personaItem: {
@@ -453,4 +472,58 @@ const styles = StyleSheet.create({
     height: 50,
     backgroundColor: 'purple'
   },
+  assignedPersonasText: {
+    fontSize: 14,
+    color: '#555',
+    marginTop: 10,
+    marginBottom: 10,
+    marginLeft: 20, 
+    fontStyle: 'italic',
+  },
+  topButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    margin: 5,
+    marginBottom: 25,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+    alignSelf: 'center',
+    maxWidth: '80%',
+  },
+  validateButton: {
+    backgroundColor: 'red',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    margin: 5,
+    marginBottom: 25,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+    alignSelf: 'center',
+    maxWidth: '80%',
+  },
+  topButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textTransform: 'uppercase',
+  },
+  buttonRow: {
+    flexDirection: 'row',         
+    justifyContent: 'space-between', 
+    alignItems: 'center',         
+    gap: 10,                      
+  }
 });

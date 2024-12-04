@@ -43,7 +43,7 @@ function parseText(data: any) {
             cost: cost,
             name: name,
             quantity: quantity,
-            subItems: ["fries", "chocolate cake"]
+            subItems: [""]
         });
     }
     else if (no_quantity_regex.test(parsed_line)) {

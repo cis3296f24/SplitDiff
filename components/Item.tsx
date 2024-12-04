@@ -63,25 +63,17 @@ function Item({ data, onEdit, onDelete }) {
         >
         <View style={styles.itemRow}>
           <View>
-            <View style={styles.itemRow}>
-              <Text style={styles.itemLabel}>{data.quantity} x</Text>
-              <Text style={styles.itemLabel}>{data.name}</Text>
-            </View>
-            {/* Sub Item */}
-            {  data.subItems.length > 0 && (
-                  data.subItems.map((subItem : any) => {
-                    return (
-                      <Text style={styles.itemSubLabel}>
-                        {subItem}
-                      </Text>
-                    )
-                  })
-              )
-            }
-
+          <View style={styles.nameAndCnt}>
+          <View>
+            <Text style={styles.itemLabel}>{data.name}</Text>
+          </View>
+          <View>
+            <Text style={styles.quantityLabel}>Quantity: {data.quantity}</Text>
+          </View>
+        </View>
           </View>
           <View style={{justifyContent: "center", alignContent: "center", flex: "1"}}>
-            <Text style={styles.itemLabel}>{data.cost.toFixed(2)} $</Text>
+            <Text style={styles.itemLabel}>${data.cost.toFixed(2)}</Text>
           </View>
         </View>
       </ReanimatedSwipeable>
@@ -137,12 +129,21 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: 2,
     gap: 5,
+    margin: 5
+  },
+  nameAndCnt: {
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   itemLabel: {
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 16,
+    color: '#333',
+  },
+  quantityLabel: {
+    fontWeight: 'bold',
+    fontSize: 12,
     color: '#333',
   },
   itemSubLabel: {
