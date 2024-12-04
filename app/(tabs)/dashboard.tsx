@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList, ScrollView } from 'react-native-gesture-handler';
@@ -17,6 +17,7 @@ import { analyzeImage, pickImage } from '@/utils/image';
 type PersonaType = {
   id: string;
   name: string;
+  selectedItems: number[];
 };
 
 type ItemType = {
@@ -24,16 +25,17 @@ type ItemType = {
   cost: number,
   name: string,
   quantity: number,
-  subItems: string[]
+  subItems: string[],
+  assignedPersonas?: string[];
 }
 
 export default function DashboardTab() {
-
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [items, setItems] = useState<ItemType[]>();
+  const [items, setItems] = useState<ItemType[]>([]);
 
   const [personaName, setPersonaName] = useState<string>('');
   const [personas, setPersonas] = useState<PersonaType[]>([]);
+  const [selectedPersona, setSelectedPersona] = useState<PersonaType | null>(null);
 
   const [isModalVisible, setModalVisible] = useState(false);
 
@@ -43,13 +45,53 @@ export default function DashboardTab() {
 
   const handleAddPersona = () => {
     if (personaName.trim() !== '') {
-      setPersonas([...personas, { id: Math.random().toString(), name: personaName.trim() }]);
+      const newPersona: PersonaType = { 
+        id: Math.random().toString(), 
+        name: personaName.trim(),
+        selectedItems: []
+      };
+      setPersonas([...personas, newPersona]);
       setPersonaName('');
     }
   };
 
   const handleRemovePersona = (id: string) => {
-    setPersonas(personas.filter(persona => persona.id !== id));
+    // Remove persona from personas list
+    const updatedPersonas = personas.filter(persona => persona.id !== id);
+    setPersonas(updatedPersonas);
+
+    // Remove this persona's selections from items
+    const updatedItems = items.map(item => ({
+      ...item,
+      assignedPersonas: item.assignedPersonas?.filter(personaId => personaId !== id)
+    }));
+    setItems(updatedItems);
+  };
+
+  const toggleItemSelection = (itemId: number) => {
+    if (!selectedPersona) {
+      Alert.alert('Select a Persona', 'Please select a persona first before assigning items.');
+      return;
+    }
+
+    // Find the current item
+    const updatedItems = items.map(item => {
+      if (item.id === itemId) {
+        // If item already has assignedPersonas, toggle the current persona
+        const currentPersonas = item.assignedPersonas || [];
+        const updatedPersonas = currentPersonas.includes(selectedPersona.id)
+          ? currentPersonas.filter(id => id !== selectedPersona.id)
+          : [...currentPersonas, selectedPersona.id];
+
+        return {
+          ...item,
+          assignedPersonas: updatedPersonas
+        };
+      }
+      return item;
+    });
+
+    setItems(updatedItems);
   };
 
   const editItem = (itemId: number, newValue) => {
@@ -62,11 +104,10 @@ export default function DashboardTab() {
   };
   const addItem = (item: ItemType) => {
     if (!items) return;
-    setItems([...items, item]);
+    setItems([...items, { ...item, assignedPersonas: [] }]);
   };
 
   function parseText(data: any) {
-
     const with_quantity_regex = /^\s*(\d+)\s+(.*\S)\s+(\(?)([0-9.]+)\)?\s*$/;
     const no_quantity_regex = /(.*\S)\s+(\(?)([0-9.]+)\)?\s*$/;
     const remove_special_char_regex = /[!@#$%^&*]/g;
@@ -74,10 +115,8 @@ export default function DashboardTab() {
     const items: ItemType[] = [];
     let id = 0;
     for (const line of data.Items.valueArray) {
-
       let parsed_line = line.content.replace(/\n/g, ' ');
       parsed_line = parsed_line.replace(remove_special_char_regex, '');
-
 
       if (with_quantity_regex.test(parsed_line)) {
         const match = parsed_line.match(with_quantity_regex);
@@ -92,7 +131,8 @@ export default function DashboardTab() {
           cost: cost,
           name: name,
           quantity: quantity,
-          subItems: ["fries", "chocolate cake"]
+          subItems: ["fries", "chocolate cake"],
+          assignedPersonas: []
         });
       }
       else if (no_quantity_regex.test(parsed_line)) {
@@ -107,7 +147,8 @@ export default function DashboardTab() {
           cost: cost,
           name: name,
           quantity: quantity,
-          subItems: []
+          subItems: [],
+          assignedPersonas: []
         });
       }
       else {
@@ -118,10 +159,8 @@ export default function DashboardTab() {
   }
 
   return (
-    // <SafeAreaView>
     <View style={{ flex: 1 }}>
       <ScrollView>
-
         <AddEditModal
           isModalVisible={isModalVisible}
           toggleModal={toggleModal}
@@ -152,21 +191,19 @@ export default function DashboardTab() {
               setItems(parseText(response));
             })
             ;
-
           }}
         >
           <Text>Extract info from Image</Text>
         </TouchableOpacity>
 
-
         <TouchableOpacity
-        onPress={() => {
-          // Load bundled JSON file for testing
-          setItems(parseText(jsonData.analyzeResult.documents[0].fields));
-        }}
-      >
-        <Text>Extract info from Bundled JSON</Text>
-      </TouchableOpacity>
+          onPress={() => {
+            // Load bundled JSON file for testing
+            setItems(parseText(jsonData.analyzeResult.documents[0].fields));
+          }}
+        >
+          <Text>Extract info from Bundled JSON</Text>
+        </TouchableOpacity>
 
         {
           items && (
@@ -175,28 +212,54 @@ export default function DashboardTab() {
                   Info:
                 </Text>
                 {
-                  items.map((item: any) => {
+                  items.map((item: ItemType) => {
                     return (
-                      <Item key={item.ind} data={item}
-                      onDelete={removeItem}
-                      onEdit={editItem} />
+                      <TouchableOpacity 
+                        key={item.id} 
+                        onPress={() => toggleItemSelection(item.id)}
+                        style={[
+                          styles.itemContainer,
+                          // Optional: Add highlight for items assigned to selected persona
+                          selectedPersona && item.assignedPersonas?.includes(selectedPersona.id) && 
+                          { backgroundColor: '#e6f2ff' }
+                        ]}
+                      >
+                        <Item 
+                          key={item.id} 
+                          data={item}
+                          onDelete={removeItem}
+                          onEdit={editItem} 
+                        />
+                        {/* Display assigned personas */}
+                        {item.assignedPersonas && item.assignedPersonas.length > 0 && (
+                          <View style={{ 
+                            backgroundColor: '#f0f0f0', 
+                            padding: 5, 
+                            borderRadius: 5,
+                            marginTop: 5 
+                          }}>
+                            <Text style={{ fontSize: 12, color: '#666' }}>
+                              Assigned to: {item.assignedPersonas.map(id => 
+                                personas.find(p => p.id === id)?.name
+                              ).join(', ')}
+                            </Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
                     )
                   })
                 }
 
-              <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
-                <Text style={styles.addButtonText}>Add Item</Text>
-              </TouchableOpacity>
-
+                <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
+                  <Text style={styles.addButtonText}>Add Item</Text>
+                </TouchableOpacity>
               </View>
           )
         }
-
       </ScrollView>
-{/* Bottom bar for adding personas */}
-    {items && (
-        <>
 
+      {items && (
+        <>
           <View style={styles.bottomBar}>
             <TextInput
               style={styles.textInput}
@@ -208,7 +271,22 @@ export default function DashboardTab() {
               <Text style={styles.addButtonText}>Add Persona</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.doneButton} onPress={() => alert('Done editing')}>
+            <TouchableOpacity 
+              style={styles.doneButton} 
+              onPress={() => {
+                // Optional: Implement split logic
+                const splitDetails = items.map(item => ({
+                  item: item.name,
+                  assignedPersonas: item.assignedPersonas 
+                    ? item.assignedPersonas.map(id => 
+                        personas.find(p => p.id === id)?.name
+                      )
+                    : []
+                }));
+                
+                alert(JSON.stringify(splitDetails, null, 2));
+              }}
+            >
               <Ionicons name="arrow-forward" size={17} color="white" />
             </TouchableOpacity>
           </View>
@@ -217,7 +295,13 @@ export default function DashboardTab() {
             data={personas}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <View style={styles.personaItem}>
+              <TouchableOpacity 
+                style={[
+                  styles.personaItem,
+                  selectedPersona?.id === item.id && { backgroundColor: '#e0e0e0' }
+                ]}
+                onPress={() => setSelectedPersona(item)}
+              >
                 <Text>{item.name}</Text>
                 <TouchableOpacity
                   style={styles.removeButton}
@@ -225,14 +309,13 @@ export default function DashboardTab() {
                 >
                   <Ionicons name="trash-outline" size={24} color="red" />
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             )}
             contentContainerStyle={styles.personaList}
           />
         </>
       )}
     </View>
-    // </SafeAreaView>
   );
 }
 
