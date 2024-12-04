@@ -5,32 +5,22 @@ import { FlatList, ScrollView } from 'react-native-gesture-handler';
 import jsonData from '../../assets/json/image0.json'; // Adjust the path as per your project structure
 import { Ionicons } from '@expo/vector-icons';
 
-import { Input, TextArea, XStack, YStack, Label, Button } from 'tamagui'
+import { useNavigation } from 'expo-router'
 
 // components
 import Item from '@/components/Item';
 import AddEditModal from '@/components/AddModal';
 
 // utils
-import { analyzeImage, pickImage } from '@/utils/image';
+import { pickImage, parseText } from '@/utils/image';
 
-type PersonaType = {
-  id: string;
-  name: string;
-  selectedItems: number[];
-};
-
-type ItemType = {
-  id: number,
-  cost: number,
-  name: string,
-  quantity: number,
-  subItems: string[],
-  assignedPersonas?: string[];
-}
+// types
+import { ItemType, PersonaType } from '@/constants/types';
 
 export default function DashboardTab() {
-  const [imageUri, setImageUri] = useState<string | null>(null);
+
+  const navigation = useNavigation<any>();
+
   const [items, setItems] = useState<ItemType[]>([]);
 
   const [personaName, setPersonaName] = useState<string>('');
@@ -75,7 +65,7 @@ export default function DashboardTab() {
     }
 
     // Find the current item
-    const updatedItems = items.map(item => {
+   const updatedItems = items.map(item => {
       if (item.id === itemId) {
         // If item already has assignedPersonas, toggle the current persona
         const currentPersonas = item.assignedPersonas || [];
@@ -107,59 +97,8 @@ export default function DashboardTab() {
     setItems([...items, { ...item, assignedPersonas: [] }]);
   };
 
-  function parseText(data: any) {
-    const with_quantity_regex = /^\s*(\d+)\s+(.*\S)\s+(\(?)([0-9.]+)\)?\s*$/;
-    const no_quantity_regex = /(.*\S)\s+(\(?)([0-9.]+)\)?\s*$/;
-    const remove_special_char_regex = /[!@#$%^&*]/g;
-
-    const items: ItemType[] = [];
-    let id = 0;
-    for (const line of data.Items.valueArray) {
-      let parsed_line = line.content.replace(/\n/g, ' ');
-      parsed_line = parsed_line.replace(remove_special_char_regex, '');
-
-      if (with_quantity_regex.test(parsed_line)) {
-        const match = parsed_line.match(with_quantity_regex);
-        if (!match)  return;
-
-        const quantity = parseInt(match[1]);
-        const name = match[2];
-        const cost = parseFloat(match[4]);
-
-        items.push({
-          id: id++,
-          cost: cost,
-          name: name,
-          quantity: quantity,
-          subItems: ["fries", "chocolate cake"],
-          assignedPersonas: []
-        });
-      }
-      else if (no_quantity_regex.test(parsed_line)) {
-        const match = parsed_line.match(no_quantity_regex);
-        if (!match) return
-        const quantity = 1;
-        const name = match[1];
-        const cost = parseFloat(match[3]);
-
-        items.push({
-          id: id++,
-          cost: cost,
-          name: name,
-          quantity: quantity,
-          subItems: [],
-          assignedPersonas: []
-        });
-      }
-      else {
-        console.log('No match found for line:', parsed_line);
-      }
-    }
-    return items;
-  }
-
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <ScrollView>
         <AddEditModal
           isModalVisible={isModalVisible}
@@ -167,17 +106,15 @@ export default function DashboardTab() {
           onAddItem={addItem}
           items={items}/>
 
-        {imageUri && (
-          <Image
-            source={{uri: imageUri}}
-            style = {{width: 300, height: 300}}
-          />
-        )}
         <TouchableOpacity
           onPress={async () => {
             const res = await pickImage();
+
             if (res) {
-              setImageUri(res);
+              navigation.navigate('media', {
+                  path: res,
+                  type: "photo",
+              })
             }
           }}
         >
@@ -185,77 +122,37 @@ export default function DashboardTab() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={ () => {
-            analyzeImage(imageUri as string)
-            .then((response) => {
-              setItems(parseText(response));
-            })
-            ;
-          }}
-        >
-          <Text>Extract info from Image</Text>
-        </TouchableOpacity>
+        onPress={() => {
+          // Load bundled JSON file for testing
+          setItems(parseText(jsonData.analyzeResult.documents[0].fields));
+        }}
+      >
+        <Text>Extract info from Bundled JSON</Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => {
-            // Load bundled JSON file for testing
-            setItems(parseText(jsonData.analyzeResult.documents[0].fields));
-          }}
-        >
-          <Text>Extract info from Bundled JSON</Text>
-        </TouchableOpacity>
+      {
+        items && (
+            <View>
+              <Text>
+                Info:
+              </Text>
+              {
+                items.map((item: any) => {
+                  return (
+                    <Item key={item.ind} data={item}
+                    onDelete={removeItem}
+                    onEdit={editItem} />
+                  )
+                })
+              }
 
-        {
-          items && (
-              <View>
-                <Text>
-                  Info:
-                </Text>
-                {
-                  items.map((item: ItemType) => {
-                    return (
-                      <TouchableOpacity 
-                        key={item.id} 
-                        onPress={() => toggleItemSelection(item.id)}
-                        style={[
-                          styles.itemContainer,
-                          // Optional: Add highlight for items assigned to selected persona
-                          selectedPersona && item.assignedPersonas?.includes(selectedPersona.id) && 
-                          { backgroundColor: '#e6f2ff' }
-                        ]}
-                      >
-                        <Item 
-                          key={item.id} 
-                          data={item}
-                          onDelete={removeItem}
-                          onEdit={editItem} 
-                        />
-                        {/* Display assigned personas */}
-                        {item.assignedPersonas && item.assignedPersonas.length > 0 && (
-                          <View style={{ 
-                            backgroundColor: '#f0f0f0', 
-                            padding: 5, 
-                            borderRadius: 5,
-                            marginTop: 5 
-                          }}>
-                            <Text style={{ fontSize: 12, color: '#666' }}>
-                              Assigned to: {item.assignedPersonas.map(id => 
-                                personas.find(p => p.id === id)?.name
-                              ).join(', ')}
-                            </Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    )
-                  })
-                }
+            <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
+              <Text style={styles.addButtonText}>Add Item</Text>
+            </TouchableOpacity>
 
-                <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
-                  <Text style={styles.addButtonText}>Add Item</Text>
-                </TouchableOpacity>
-              </View>
-          )
-        }
+            </View>
+        )
+      }
       </ScrollView>
 
       {items && (
@@ -315,7 +212,7 @@ export default function DashboardTab() {
           />
         </>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -403,5 +300,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginLeft: 10,
   },
-  rightAction: { width: 50, height: 50, backgroundColor: 'purple' },
+  rightAction: {
+    width: 50,
+    height: 50,
+    backgroundColor: 'purple'
+  },
 });

@@ -261,8 +261,6 @@ export default function CameraPage(): React.ReactElement {
         }}
         style={styles.button} >
             <MaterialIcon name='photo-library' color="white" size={30} />
-            {/* <Link href="/media"> */}
-            {/* </Link> */}
         </PressableOpacity>
 
       <View style={styles.rightButtonRow}>
