@@ -15,19 +15,62 @@ import AddEditModal from '@/components/AddModal';
 import { pickImage, parseText } from '@/utils/image';
 
 // types
-import { ItemType, PersonaType } from '@/constants/types';
+import { ItemType, PersonaType, SplitResult } from '@/constants/types';
 
 export default function DashboardTab() {
-
   const navigation = useNavigation<any>();
 
   const [items, setItems] = useState<ItemType[]>([]);
-
   const [personaName, setPersonaName] = useState<string>('');
   const [personas, setPersonas] = useState<PersonaType[]>([]);
   const [selectedPersona, setSelectedPersona] = useState<PersonaType | null>(null);
-
   const [isModalVisible, setModalVisible] = useState(false);
+  const [splitResults, setSplitResults] = useState<SplitResult[]>([]);
+  const [isInputFocused, setInputFocused] = useState(false); // Track if the input is focused
+
+  useEffect(() => {
+    // Calculate split results whenever items or personas change
+    if (items.length >= 0 && personas.length >= 0) {
+      const results = calculateSplitBill(items, personas);
+      setSplitResults(results);
+    }
+  }, [items, personas]);
+
+  const calculateSplitBill = (items: ItemType[], personas: PersonaType[]): SplitResult[] => {
+    // Initialize bill split results
+    const billSplit: { [key: string]: number } = {};
+
+    // Initialize bill split with zero for each persona
+    personas.forEach(persona => {
+      billSplit[persona.name] = 0;
+    });
+
+    // Calculate each person's share
+    items.forEach(item => {
+      // Ensure price is a valid number and personas are assigned
+      const itemPrice = item.cost; // Changed from 'price' to 'cost' based on your types
+      
+      // Only split if personas are assigned
+      if (item.assignedPersonas && item.assignedPersonas.length > 0) {
+        // Calculate split price for this item
+        const splitPrice = itemPrice / item.assignedPersonas.length;
+
+        // Add split price to each assigned persona
+        item.assignedPersonas.forEach(personaId => {
+          const persona = personas.find(p => p.id === personaId);
+          if (persona) {
+            billSplit[persona.name] += splitPrice;
+          }
+        });
+      }
+    });
+
+    // Convert to SplitResult array and round to 2 decimal places
+    return Object.keys(billSplit).map(name => ({
+      name,
+      amount: Number(billSplit[name].toFixed(2))
+    }));
+  };
 
   const toggleModal = () => {
     setModalVisible(!isModalVisible);
@@ -65,7 +108,7 @@ export default function DashboardTab() {
     }
 
     // Find the current item
-   const updatedItems = items.map(item => {
+    const updatedItems = items.map(item => {
       if (item.id === itemId) {
         // If item already has assignedPersonas, toggle the current persona
         const currentPersonas = item.assignedPersonas || [];
@@ -92,9 +135,74 @@ export default function DashboardTab() {
     if (!items) return;
     setItems(items.filter((item) => item.id != itemId));
   };
+
   const addItem = (item: ItemType) => {
     if (!items) return;
     setItems([...items, { ...item, assignedPersonas: [] }]);
+  };
+
+  const getAssignedPersonaNames = (item: ItemType) => {
+    if (!item.assignedPersonas || item.assignedPersonas.length === 0) return 'No one selected';
+    return item.assignedPersonas
+      .map(personaId => personas.find(p => p.id === personaId)?.name)
+      .filter(Boolean)
+      .join(', ');
+  };
+
+  const validateBill = () => {
+    // Detailed validation with comprehensive error reporting
+    if (personas.length === 0) {
+      Alert.alert('Error', 'Please add at least one persona.');
+      return;
+    }
+
+    if (items.length === 0) {
+      Alert.alert('Error', 'Please add at least one item.');
+      return;
+    }
+
+    // Detailed item validation
+    const problemItems = items.filter(item => {
+      // Check for invalid or missing price
+      const invalidPrice = 
+        item.cost === undefined || 
+        item.cost === null || 
+        item.cost === 0 || 
+        isNaN(Number(item.cost));
+
+      // Check for no assigned personas
+      const noPersonasAssigned = 
+        !item.assignedPersonas || 
+        item.assignedPersonas.length === 0;
+
+      return invalidPrice || noPersonasAssigned;
+    });
+
+    // If there are problematic items, provide detailed error
+    if (problemItems.length > 0) {
+      const errorDetails = problemItems.map(item => {
+        const priceStatus = item.cost === undefined ? 'No price' : 
+                            item.cost === null ? 'Null price' : 
+                            item.cost === 0 ? 'Zero price' : 
+                            isNaN(Number(item.cost)) ? 'Invalid price' : 'Valid price';
+        
+        const personaStatus = !item.assignedPersonas ? 'No personas array' :
+                               item.assignedPersonas.length === 0 ? 'No personas assigned' : 'Personas assigned';
+        
+        return `Item: ${item.name || 'Unnamed'} (Price: ${priceStatus}, Personas: ${personaStatus})`;
+      }).join('\n');
+
+      Alert.alert(
+        'Bill Splitting Error', 
+        'Some items are missing price or persona assignments:\n\n' + errorDetails
+      );
+      return;
+    }
+
+    Alert.alert(
+      'All items accounted for!', 
+    );
+
   };
 
   return (
@@ -104,88 +212,101 @@ export default function DashboardTab() {
           isModalVisible={isModalVisible}
           toggleModal={toggleModal}
           onAddItem={addItem}
-          items={items}/>
+          items={items}
+        />
 
-        <TouchableOpacity
-          onPress={async () => {
-            const res = await pickImage();
+<View style={styles.buttonRow}>
+  <TouchableOpacity
+    style={styles.topButton}
+    onPress={async () => {
+      const res = await pickImage();
+      if (res) {
+        navigation.navigate('media', {
+          path: res,
+          type: "photo",
+        });
+      }
+    }}
+  >
+    <Text style={styles.topButtonText}>Choose an Image</Text>
+  </TouchableOpacity>
 
-            if (res) {
-              navigation.navigate('media', {
-                  path: res,
-                  type: "photo",
-              })
-            }
-          }}
-        >
-          <Text>Choose an Image</Text>
-        </TouchableOpacity>
+  <TouchableOpacity
+    style={styles.topButton}
+    onPress={() => {
+      // Load bundled JSON file for testing
+      setItems(parseText(jsonData.analyzeResult.documents[0].fields));
+    }}
+  >
+    <Text style={styles.topButtonText}>Test Receipt Data</Text>
+  </TouchableOpacity>
 
-        <TouchableOpacity
-        onPress={() => {
-          // Load bundled JSON file for testing
-          setItems(parseText(jsonData.analyzeResult.documents[0].fields));
-        }}
-      >
-        <Text>Extract info from Bundled JSON</Text>
-      </TouchableOpacity>
+</View>
 
-      {
-        items && (
-            <View>
-              <Text>
-                Info:
-              </Text>
-              {
-                items.map((item: any) => {
-                  return (
-                    <Item key={item.ind} data={item}
+        {items && (
+          <View>
+            {items.map((item: ItemType) => (
+              <View key={item.id}>
+                <TouchableOpacity 
+                  onPress={() => toggleItemSelection(item.id)}
+                  style={selectedPersona ? styles.selectableItem : {}}
+                >
+                  <Item 
+                    data={item}
                     onDelete={removeItem}
-                    onEdit={editItem} />
-                  )
-                })
-              }
+                    onEdit={editItem} 
+                  />
+                </TouchableOpacity>
+                <Text style={styles.assignedPersonasText}>
+                  {getAssignedPersonaNames(item)}
+                </Text>
+              </View>
+            ))}
 
-            <TouchableOpacity style={styles.addButton} onPress={toggleModal}>
-              <Text style={styles.addButtonText}>Add Item</Text>
+            <TouchableOpacity style={styles.topButton} onPress={toggleModal}>
+              <Text style={styles.topButtonText}>Add Item</Text>
             </TouchableOpacity>
 
-            </View>
-        )
-      }
+            <TouchableOpacity style={styles.validateButton} onPress={validateBill} >
+              <Text style={styles.topButtonText}>Validate Bill</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Bill Split Results */}
+        {splitResults.length > 0 && (
+          <View style={styles.container}>
+            <Text style={styles.header}>Split Bill Results</Text>
+            <FlatList
+              data={splitResults}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.resultRow}>
+                  <Text style={styles.personaName}>{item.name}</Text>
+                  <Text style={styles.amount}>${item.amount.toFixed(2)}</Text>
+                </View>
+              )}
+            />
+          </View>
+        )}
       </ScrollView>
 
       {items && (
-        <>
-          <View style={styles.bottomBar}>
+        <View style={{ maxHeight: 285 }}>
+          <View style={[styles.bottomBar]}>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput]}
               placeholder="Enter persona name"
               value={personaName}
               onChangeText={setPersonaName}
+              onFocus={() => setInputFocused(true)}  
+              onBlur={() => setInputFocused(false)}    
             />
             <TouchableOpacity style={styles.addButton} onPress={handleAddPersona}>
               <Text style={styles.addButtonText}>Add Persona</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.doneButton} 
-              onPress={() => {
-                // Optional: Implement split logic
-                const splitDetails = items.map(item => ({
-                  item: item.name,
-                  assignedPersonas: item.assignedPersonas 
-                    ? item.assignedPersonas.map(id => 
-                        personas.find(p => p.id === id)?.name
-                      )
-                    : []
-                }));
-                
-                alert(JSON.stringify(splitDetails, null, 2));
-              }}
-            >
-              <Ionicons name="arrow-forward" size={17} color="white" />
-            </TouchableOpacity>
+            
           </View>
 
           <FlatList
@@ -199,7 +320,7 @@ export default function DashboardTab() {
                 ]}
                 onPress={() => setSelectedPersona(item)}
               >
-                <Text>{item.name}</Text>
+                <Text style={{ fontSize: 20 }}>{item.name}</Text>
                 <TouchableOpacity
                   style={styles.removeButton}
                   onPress={() => handleRemovePersona(item.id)}
@@ -208,9 +329,9 @@ export default function DashboardTab() {
                 </TouchableOpacity>
               </TouchableOpacity>
             )}
-            contentContainerStyle={styles.personaList}
+            contentContainerStyle={[styles.personaList, isInputFocused && styles.bottomBarTextFocused]}
           />
-        </>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -227,6 +348,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
+  },
+  doneButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginLeft: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    color: 'white',
+    marginRight: 5,
   },
   itemRow: {
     flexDirection: 'row',
@@ -264,20 +398,28 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    marginRight: 10,
+    margin: 10,
+    height: 40,  
+  },
+  bottomBarTextFocused: {
+    height: 240,
   },
   addButton: {
     backgroundColor: '#007bff',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
+    margin:8,
   },
   addButtonText: {
+    fontSize: 15,
     color: '#fff',
     fontWeight: 'bold',
   },
   personaList: {
-    padding: 10,
+    padding: 15,
+    paddingTop: 2,
+    paddingBottom: 2,
     backgroundColor: '#f9f9f9',
   },
   personaItem: {
@@ -293,16 +435,95 @@ const styles = StyleSheet.create({
     padding: 5,
     backgroundColor: 'transparent',
   },
-  doneButton: {
-    backgroundColor: '#007bff',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    marginLeft: 10,
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#f9f9f9',
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#333',
+  },
+  resultRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 12,
+    marginVertical: 4,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  personaName: {
+    fontSize: 18,
+    color: '#555',
+  },
+  amount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007BFF',
   },
   rightAction: {
     width: 50,
     height: 50,
     backgroundColor: 'purple'
   },
+  assignedPersonasText: {
+    fontSize: 14,
+    color: '#555',
+    marginTop: 10,
+    marginBottom: 10,
+    marginLeft: 20, 
+    fontStyle: 'italic',
+  },
+  topButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    margin: 5,
+    marginBottom: 25,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+    alignSelf: 'center',
+    maxWidth: '80%',
+  },
+  validateButton: {
+    backgroundColor: 'red',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    margin: 5,
+    marginBottom: 25,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+    alignSelf: 'center',
+    maxWidth: '80%',
+  },
+  topButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textTransform: 'uppercase',
+  },
+  buttonRow: {
+    flexDirection: 'row',         
+    justifyContent: 'space-between', 
+    alignItems: 'center',         
+    gap: 10,                      
+  }
 });
